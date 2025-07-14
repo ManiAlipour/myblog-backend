@@ -1,6 +1,7 @@
 import * as bcrypt from "bcrypt";
 import { sendEmail } from "./sendEmail";
 import _ from "lodash";
+import jwt from "jsonwebtoken";
 
 export const hashPassword = async (plainPassword: string) => {
   const salt = await bcrypt.genSalt(10);
@@ -62,4 +63,18 @@ export const filterUser = (user: any) => {
   ];
 
   return _.omit(user, SENSITIVE_FIELDS);
+};
+
+export const generateToken = (user: any) => {
+  const payload = {
+    userId: user._id,
+    email: user.email,
+    role: user.role,
+  };
+
+  const token = jwt.sign(payload, process.env.JWT_SECRET!, {
+    expiresIn: "30d",
+  });
+
+  return token;
 };

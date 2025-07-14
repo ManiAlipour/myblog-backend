@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3000;
 connectToDB();
 
 app.use(express.json());
-app.use("/", indexRouter);
+app.use("/api", indexRouter);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

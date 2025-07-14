@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import User from "../models/User";
 import {
   filterUser,
+  generateToken,
   hashPassword,
   sendVerificationCode,
 } from "../utils/authfunctionalities";
@@ -45,4 +46,40 @@ export async function addNewUser(req: Request, res: Response) {
   } catch (error) {
     res.status(500).json({ status: false, error: "خطای ارتباط با سرور." });
   }
+}
+
+export async function verifyEmail(req: Request, res: Response) {
+  const { code, email } = req.body;
+
+  const user = await User.findOne({ email: email?.toLowerCase().trim() });
+
+  if (!user) {
+    return res.status(404).json({ message: "کاربر پیدا نشد!" });
+  }
+
+  if (!user.verificationCode || !user.verificationCodeExpires) {
+    return res.status(400).json({ message: "کد ورودی برای کاربر ست نشده است" });
+  }
+
+  if (
+    user.verificationCode !== code ||
+    user.verificationCodeExpires < new Date()
+  ) {
+    return res
+      .status(400)
+      .json({ message: "کد نامعتبر است یا منقضی شده است!" });
+  }
+
+  user.isEmailVerified = true;
+  user.verificationCode = "";
+  user.verificationCodeExpires = null;
+  await user.save();
+
+  const token = generateToken(user);
+
+  return res.status(200).json({
+    message: "Email verified successfully.",
+    user: filterUser(user.toObject()),
+    token,
+  });
 }
