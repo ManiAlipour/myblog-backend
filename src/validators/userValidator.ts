@@ -26,3 +26,22 @@ export const loginValidator = [
     .withMessage("ایمیل معتبر نیست."),
   body("password").notEmpty().withMessage("رمز عبور الزامی است."),
 ];
+
+export const editProfileValidator = [
+  body("username")
+    .optional()
+    .isLength({ min: 3, max: 32 })
+    .withMessage("نام کاربری باید بین ۳ تا ۳۲ کاراکتر باشد."),
+  body("name")
+    .optional()
+    .isLength({ max: 64 })
+    .withMessage("نام نمی‌تواند بیشتر از ۶۴ کاراکتر باشد."),
+  body("bio")
+    .optional()
+    .isLength({ max: 256 })
+    .withMessage("بیوگرافی نمی‌تواند بیشتر از ۲۵۶ کاراکتر باشد."),
+  body("avatar")
+    .optional()
+    .isURL()
+    .withMessage("آواتار باید یک آدرس معتبر باشد."),
+];

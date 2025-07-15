@@ -6,14 +6,11 @@ export const canAccessOwnProfile = (
   res: Response,
   next: NextFunction
 ) => {
-  if (req.user && req.user.role === "admin") {
+  if (req.user) {
+    // هر کاربر لاگین‌شده می‌تواند پروفایل خودش را مدیریت کند
     return next();
   }
-
-  const paramId = req.params.id;
-  if (!req.user || String(req.user._id) !== String(paramId)) {
-    return res.status(403).json({ message: "اجازه دسترسی به این پروفایل را ندارید!" });
-  }
-
-  next();
+  return res
+    .status(403)
+    .json({ message: "اجازه دسترسی به این پروفایل را ندارید!" });
 };

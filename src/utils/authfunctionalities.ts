@@ -62,7 +62,11 @@ export const filterUser = (user: any) => {
     "isActive",
   ];
 
-  return _.omit(user, SENSITIVE_FIELDS);
+  let filteredUser = _.omit(user, SENSITIVE_FIELDS) as Record<string, any>;
+  filteredUser.id = filteredUser._id;
+  delete filteredUser._id;
+
+  return filteredUser;
 };
 
 export const generateToken = (user: any) => {

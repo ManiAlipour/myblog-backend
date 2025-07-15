@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { validationResult } from "express-validator";
 import User from "../models/User";
 import {
   filterUser,
@@ -7,8 +8,13 @@ import {
   isMatchPassword,
   sendVerificationCode,
 } from "../utils/authfunctionalities";
+import { AuthRequest } from "../middleware/authMiddleware";
 
 export async function addNewUser(req: Request, res: Response) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ success: false, errors: errors.array() });
+  }
   const { email, password, username } = req.body;
 
   try {
@@ -92,6 +98,10 @@ export async function verifyEmail(req: Request, res: Response) {
 }
 
 export async function login(req: Request, res: Response) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ success: false, errors: errors.array() });
+  }
   const { email, password } = req.body;
 
   try {
@@ -122,3 +132,96 @@ export async function login(req: Request, res: Response) {
   }
 }
 
+export async function getProfile(req: AuthRequest, res: Response) {
+  const user = req.user;
+
+  try {
+    const filteredUser = filterUser(user.toObject());
+
+    res.json({
+      success: true,
+      message: "پروفایل با موفقیت دریافت شد.",
+      data: filteredUser,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: "خطای ارتباط با سرور." });
+  }
+}
+
+export async function editProfile(req: AuthRequest, res: Response) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ success: false, error: errors.array() });
+  }
+
+  const { username, name, bio, avatar } = req.body;
+
+  try {
+    if (username && username !== req.user.username) {
+      const userWithSameUsername = await User.findOne({ username });
+      if (
+        userWithSameUsername &&
+        userWithSameUsername._id.toString() !== req.user._id.toString()
+      ) {
+        return res.status(409).json({
+          success: false,
+          message: "این نام کاربری قبلاً توسط کاربر دیگری ثبت شده است.",
+        });
+      }
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        ...(username !== undefined && { username }),
+        ...(name !== undefined && { name }),
+        ...(bio !== undefined && { bio }),
+        ...(avatar !== undefined && { avatar }),
+      },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, error: "کاربر پیدا نشد!" });
+    }
+
+    const filteredUser = filterUser(updatedUser.toObject());
+
+    res.json({
+      success: true,
+      message: "پروفایل با موفقیت ویرایش شد.",
+      data: filteredUser,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: "خطای ارتباط با سرور." });
+  }
+}
+
+export async function getAllUsers(req: AuthRequest, res: Response) {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await Promise.all([
+      User.find().skip(skip).limit(limit),
+      User.countDocuments(),
+    ]);
+
+    const filteredUsers = users.map((user) => filterUser(user.toObject()));
+    res.json({
+      success: true,
+      message: "لیست کاربران با موفقیت دریافت شد.",
+      data: filteredUsers,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: "خطای ارتباط با سرور." });
+  }
+}
