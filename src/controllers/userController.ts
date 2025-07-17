@@ -1,20 +1,18 @@
 import { Request, Response } from "express";
-import { validationResult } from "express-validator";
 import User from "../models/User";
 import {
-  filterUser,
   generateToken,
   hashPassword,
   isMatchPassword,
   sendVerificationCode,
+  useValidationResult,
 } from "../utils/authfunctionalities";
+import { filterUser } from "../utils/filterMethods";
 import { AuthRequest } from "../middleware/authMiddleware";
 
 export async function addNewUser(req: Request, res: Response) {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ success: false, errors: errors.array() });
-  }
+  if (useValidationResult({ req, res })) return;
+
   const { email, password, username } = req.body;
 
   try {
@@ -27,23 +25,30 @@ export async function addNewUser(req: Request, res: Response) {
       if (existingUser.email === email.toLowerCase())
         message = "ایمیل قبلاً ثبت شده است.";
       else message = "نام کاربری قبلاً استفاده شده است.";
-      return res.status(409).json({ success: false, error: message });
+      return res.status(409).json({ success: false, message });
     }
 
     const hashedPassword = await hashPassword(password);
-    const verificationCode = await sendVerificationCode(email);
+    const code = await sendVerificationCode(email);
+
+    if (!code) {
+      return res.status(500).json({
+        success: false,
+        message: "ارسال ایمیل تایید انجام نشد. لطفاً کمی بعد دوباره تلاش کنید.",
+      });
+    }
 
     const user = new User({
       email: email.toLowerCase(),
       password: hashedPassword,
       username,
-      verificationCode,
+      code,
     });
 
     user.verificationCodeExpires = new Date(Date.now() + 5 * 60 * 1000);
     const savedUser = await user.save();
 
-    const filteredUser = filterUser(user.toObject());
+    const filteredUser = filterUser(savedUser);
 
     res.json({
       success: true,
@@ -51,7 +56,7 @@ export async function addNewUser(req: Request, res: Response) {
       user: filteredUser,
     });
   } catch (error) {
-    res.status(500).json({ success: false, error: "خطای ارتباط با سرور." });
+    res.status(500).json({ success: false, message: "خطای ارتباط با سرور." });
   }
 }
 
@@ -89,7 +94,7 @@ export async function verifyEmail(req: Request, res: Response) {
 
     return res.status(200).json({
       message: "اعتبارسنجی ایمیل با موفقیت انجام شد.",
-      user: filterUser(user.toObject()),
+      user: filterUser(user),
       token,
     });
   } catch (error) {
@@ -98,10 +103,8 @@ export async function verifyEmail(req: Request, res: Response) {
 }
 
 export async function login(req: Request, res: Response) {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ success: false, errors: errors.array() });
-  }
+  if (useValidationResult({ req, res })) return;
+
   const { email, password } = req.body;
 
   try {
@@ -124,7 +127,7 @@ export async function login(req: Request, res: Response) {
 
     return res.status(200).json({
       message: "ورود کاربر با موفقیت انجام شد.",
-      user: filterUser(user.toObject()),
+      user: filterUser(user),
       token,
     });
   } catch (error) {
@@ -136,7 +139,7 @@ export async function getProfile(req: AuthRequest, res: Response) {
   const user = req.user;
 
   try {
-    const filteredUser = filterUser(user.toObject());
+    const filteredUser = filterUser(user);
 
     res.json({
       success: true,
@@ -149,10 +152,7 @@ export async function getProfile(req: AuthRequest, res: Response) {
 }
 
 export async function editProfile(req: AuthRequest, res: Response) {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ success: false, error: errors.array() });
-  }
+  if (useValidationResult({ req, res })) return;
 
   const { username, name, bio, avatar } = req.body;
 
@@ -185,7 +185,7 @@ export async function editProfile(req: AuthRequest, res: Response) {
       return res.status(404).json({ success: false, error: "کاربر پیدا نشد!" });
     }
 
-    const filteredUser = filterUser(updatedUser.toObject());
+    const filteredUser = filterUser(updatedUser);
 
     res.json({
       success: true,
@@ -256,7 +256,7 @@ export async function getAllUsers(req: AuthRequest, res: Response) {
       User.countDocuments(query),
     ]);
 
-    const filteredUsers = users.map((user) => filterUser(user.toObject()));
+    const filteredUsers = users.map((user) => filterUser(user));
     res.json({
       success: true,
       message: "لیست کاربران با موفقیت دریافت شد.",

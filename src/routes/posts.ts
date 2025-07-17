@@ -17,14 +17,14 @@ router.get("/:id/comments", commentController.getPostComments);
 
 router.use(authMiddleware);
 
-router.post("/:id/add-comment", commentController.addCommentToPost);
+router.post("/:id/comments/add-comment", commentController.addCommentToPost);
 
-router.use(canAccessOwnProfile)
+router.use(canAccessOwnProfile);
 router.delete("/comments/:id", commentController.deleteComment);
 
 router.use(adminMiddleware);
 
-router.put("/");
+router.put("/comments/accept/:id", commentController.setConfirmComment);
 router.post("/", addPostValidator, postController.addNewPost);
 router.put("/:id", editPostValidator, postController.editPost);
 router.delete("/:id", postController.deletePost);

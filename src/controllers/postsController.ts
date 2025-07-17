@@ -1,10 +1,9 @@
 import { Request, Response } from "express";
 import Post from "../models/Post";
-import { validationResult } from "express-validator";
-import { filterPost, filterComment } from "../utils/authfunctionalities";
+import { filterPost } from "../utils/filterMethods";
 import { AuthRequest } from "../middleware/authMiddleware";
 import _ from "lodash";
-import Comment from "../models/Comment";
+import { useValidationResult } from "../utils/authfunctionalities";
 
 export async function getAllPosts(req: Request, res: Response) {
   try {
@@ -101,10 +100,7 @@ export async function getOnePost(req: Request, res: Response) {
 }
 
 export async function addNewPost(req: AuthRequest, res: Response) {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ success: false, error: errors.array() });
-  }
+  if (useValidationResult({ req, res })) return;
 
   const { title, slug, content, categories, tags, coverImage, published } =
     req.body;
@@ -142,10 +138,7 @@ export async function addNewPost(req: AuthRequest, res: Response) {
 }
 
 export async function editPost(req: AuthRequest, res: Response) {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ success: false, error: errors.array() });
-  }
+  if (useValidationResult({ req, res })) return;
 
   const { id } = req.params;
   const objectIdPattern = /^[0-9a-fA-F]{24}$/;
@@ -232,5 +225,3 @@ export async function deletePost(req: Request, res: Response) {
     res.status(500).json({ success: false, error: "خطای ارتباط با سرور." });
   }
 }
-
-
