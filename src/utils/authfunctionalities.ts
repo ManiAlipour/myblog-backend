@@ -2,6 +2,10 @@ import * as bcrypt from "bcrypt";
 import { sendEmail } from "./sendEmail";
 import _ from "lodash";
 import jwt from "jsonwebtoken";
+import { allowedPostFields, SENSITIVE_USER_FIELDS } from "./constants/fields";
+import { IPost } from "../models/Post";
+import { allowedCommentFields } from "./constants/fields";
+import Comment from "../models/Comment";
 
 export const hashPassword = async (plainPassword: string) => {
   const salt = await bcrypt.genSalt(10);
@@ -53,21 +57,29 @@ export const sendVerificationCode = async (
 };
 
 export const filterUser = (user: any) => {
-  const SENSITIVE_FIELDS = [
-    "password",
-    "verificationCode",
-    "verificationCodeExpires",
-    "__v",
-    // "resetToken",
-    "isActive",
-  ];
-
-  let filteredUser = _.omit(user, SENSITIVE_FIELDS) as Record<string, any>;
+  let filteredUser = _.omit(user, SENSITIVE_USER_FIELDS) as Record<string, any>;
   filteredUser.id = filteredUser._id;
   delete filteredUser._id;
 
   return filteredUser;
 };
+
+export function filterPost(post: IPost) {
+  const obj = typeof post.toObject === "function" ? post.toObject() : post;
+  const picked = _.pick(obj, allowedPostFields);
+  picked.id = picked._id?.toString();
+  delete picked._id;
+  return picked;
+}
+
+export function filterComment(comment: any) {
+  const obj =
+    typeof comment.toObject === "function" ? comment.toObject() : comment;
+  const picked = _.pick(obj, allowedCommentFields);
+  picked.id = picked._id?.toString();
+  delete picked._id;
+  return picked;
+}
 
 export const generateToken = (user: any) => {
   const payload = {
@@ -82,3 +94,16 @@ export const generateToken = (user: any) => {
 
   return token;
 };
+
+export async function deleteCommentAndChildren(commentId: any) {
+  const children = await Comment.find({ parent: commentId });
+  for (const child of children) {
+    await deleteCommentAndChildren(child._id); // بازگشتی
+  }
+  await Comment.findByIdAndDelete(commentId);
+}
+
+const objectIdPattern = /^[0-9a-fA-F]{24}$/;
+
+export const objectIdPatternCheck = (objectId: any) =>
+  objectIdPattern.test(objectId);

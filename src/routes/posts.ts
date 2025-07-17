@@ -1,17 +1,32 @@
 import { Router } from "express";
-import * as PostsController from "../controllers/postsController";
+import * as postController from "../controllers/postsController";
+import * as commentController from "../controllers/commentsController";
 import { authMiddleware } from "../middleware/authMiddleware";
 import { adminMiddleware } from "../middleware/adminMiddleware";
+import {
+  addPostValidator,
+  editPostValidator,
+} from "../validators/postValidator";
+import { canAccessOwnProfile } from "../middleware/canAccessOwnProfile";
 
 const router = Router();
 
-router.get("/", PostsController.getAllPosts);
-router.get("/:id", PostsController.getOnePost);
+router.get("/", postController.getAllPosts);
+router.get("/:id", postController.getOnePost);
+router.get("/:id/comments", commentController.getPostComments);
 
 router.use(authMiddleware);
+
+router.post("/:id/add-comment", commentController.addCommentToPost);
+
+router.use(canAccessOwnProfile)
+router.delete("/comments/:id", commentController.deleteComment);
+
 router.use(adminMiddleware);
-router.post("/", PostsController.addNewPost);
-router.put("/:id", PostsController.editPost);
-router.delete("/:id", PostsController.deletePost);
+
+router.put("/");
+router.post("/", addPostValidator, postController.addNewPost);
+router.put("/:id", editPostValidator, postController.editPost);
+router.delete("/:id", postController.deletePost);
 
 export default router;

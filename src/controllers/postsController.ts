@@ -1,5 +1,10 @@
 import { Request, Response } from "express";
 import Post from "../models/Post";
+import { validationResult } from "express-validator";
+import { filterPost, filterComment } from "../utils/authfunctionalities";
+import { AuthRequest } from "../middleware/authMiddleware";
+import _ from "lodash";
+import Comment from "../models/Comment";
 
 export async function getAllPosts(req: Request, res: Response) {
   try {
@@ -57,7 +62,7 @@ export async function getAllPosts(req: Request, res: Response) {
     res.json({
       success: true,
       message: "لیست پست‌ها با موفقیت دریافت شد.",
-      data: posts,
+      data: posts.map((post) => filterPost(post)),
       pagination: {
         total,
         page: pageNum,
@@ -88,15 +93,144 @@ export async function getOnePost(req: Request, res: Response) {
     res.json({
       success: true,
       message: "پست با موفقیت دریافت شد.",
-      data: post,
+      data: filterPost(post),
     });
   } catch (error) {
     res.status(500).json({ success: false, error: "خطای ارتباط با سرور." });
   }
 }
 
-export async function addNewPost(req: Request, res: Response) {}
+export async function addNewPost(req: AuthRequest, res: Response) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ success: false, error: errors.array() });
+  }
 
-export async function editPost(req: Request, res: Response) {}
+  const { title, slug, content, categories, tags, coverImage, published } =
+    req.body;
 
-export async function deletePost(req: Request, res: Response) {}
+  try {
+    const postWithSlug = await Post.findOne({ slug });
+
+    if (postWithSlug)
+      return res.status(409).json({
+        success: false,
+        message: "پست با این اسلاگ قبلا ثبت شده است",
+      });
+
+    const post = new Post({
+      title,
+      slug,
+      content,
+      author: req.user._id,
+      categories,
+      tags,
+      coverImage: coverImage || null,
+      published: typeof published === "boolean" ? published : false,
+    });
+
+    const savedPost = await post.save();
+
+    res.json({
+      success: true,
+      message: "پست با موفقیت افزوده شد",
+      data: filterPost(savedPost.toObject()),
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: "خطای ارتباط با سرور." });
+  }
+}
+
+export async function editPost(req: AuthRequest, res: Response) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ success: false, error: errors.array() });
+  }
+
+  const { id } = req.params;
+  const objectIdPattern = /^[0-9a-fA-F]{24}$/;
+  if (!id || !objectIdPattern.test(id)) {
+    return res
+      .status(400)
+      .json({ success: false, error: "شناسه پست نامعتبر است." });
+  }
+
+  try {
+    const post = await Post.findById(id);
+    if (!post) {
+      return res.status(404).json({ success: false, error: "پست پیدا نشد!" });
+    }
+    if (
+      post.author.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res
+        .status(403)
+        .json({ success: false, error: "شما اجازه ویرایش این پست را ندارید." });
+    }
+
+    if (req.body.slug && req.body.slug !== post.slug) {
+      const duplicate = await Post.findOne({
+        slug: req.body.slug,
+        _id: { $ne: post._id },
+      });
+      if (duplicate)
+        return res
+          .status(409)
+          .json({ success: false, error: "اسلاگ وارد شده تکراری است." });
+    }
+
+    const updatableFields = [
+      "title",
+      "slug",
+      "content",
+      "categories",
+      "tags",
+      "coverImage",
+      "published",
+    ];
+    const data = _.pick(req.body, updatableFields);
+    Object.assign(post, data);
+
+    if (req.body.published === true && !post.publishedAt) {
+      post.publishedAt = new Date();
+    }
+    await post.save();
+
+    await post.populate("author", "username name");
+    await post.populate("categories", "name");
+    res.json({
+      success: true,
+      message: "پست با موفقیت ویرایش شد.",
+      data: filterPost(post),
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: "خطای ارتباط با سرور." });
+  }
+}
+
+export async function deletePost(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+    const objectIdPattern = /^[0-9a-fA-F]{24}$/;
+    if (!id || !objectIdPattern.test(id)) {
+      return res
+        .status(400)
+        .json({ success: false, error: "شناسه پست نامعتبر است." });
+    }
+    const post = await Post.findById(id);
+    if (!post) {
+      return res.status(404).json({ success: false, error: "پست پیدا نشد!" });
+    }
+    await Post.findByIdAndDelete(id);
+    res.json({
+      success: true,
+      message: "پست با موفقیت حذف شد.",
+      data: filterPost(post.toObject()),
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: "خطای ارتباط با سرور." });
+  }
+}
+
+
