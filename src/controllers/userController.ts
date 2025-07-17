@@ -9,6 +9,10 @@ import {
 } from "../utils/authfunctionalities";
 import { filterUser } from "../utils/filterMethods";
 import { AuthRequest } from "../middleware/authMiddleware";
+import messages from "../utils/constants/messages";
+
+const MSG_EMAIL_USED = "ایمیل قبلاً ثبت شده است.";
+const MSG_USERNAME_USED = "نام کاربری قبلاً استفاده شده است.";
 
 export async function addNewUser(req: Request, res: Response) {
   if (useValidationResult({ req, res })) return;
@@ -21,10 +25,8 @@ export async function addNewUser(req: Request, res: Response) {
     });
 
     if (existingUser) {
-      let message = "";
-      if (existingUser.email === email.toLowerCase())
-        message = "ایمیل قبلاً ثبت شده است.";
-      else message = "نام کاربری قبلاً استفاده شده است.";
+      const isEmailUsed = existingUser.email === email.toLowerCase();
+      const message = isEmailUsed ? MSG_EMAIL_USED : MSG_USERNAME_USED;
       return res.status(409).json({ success: false, message });
     }
 
@@ -45,18 +47,22 @@ export async function addNewUser(req: Request, res: Response) {
       code,
     });
 
-    user.verificationCodeExpires = new Date(Date.now() + 5 * 60 * 1000);
+    const VERIFICATION_CODE_EXPIRE_MS = 5 * 60 * 1000;
+    user.verificationCodeExpires = new Date(
+      Date.now() + VERIFICATION_CODE_EXPIRE_MS
+    );
+
     const savedUser = await user.save();
 
     const filteredUser = filterUser(savedUser);
 
     res.json({
       success: true,
-      message: "کد تایید با موفقیت ارسال شد!",
+      message: messages.SUCCESS,
       user: filteredUser,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: "خطای ارتباط با سرور." });
+    res.status(500).json({ success: false, message: messages.SERVER_ERROR });
   }
 }
 
@@ -67,13 +73,13 @@ export async function verifyEmail(req: Request, res: Response) {
     const user = await User.findOne({ email: email?.toLowerCase().trim() });
 
     if (!user) {
-      return res.status(404).json({ message: "کاربر پیدا نشد!" });
+      return res.status(404).json({ message: messages.USER_NOT_FOUND });
     }
 
     if (!user.verificationCode || !user.verificationCodeExpires) {
       return res
         .status(400)
-        .json({ message: "کد ورودی برای کاربر ست نشده است" });
+        .json({ message: messages.VERIFICATION_CODE_NOT_SET });
     }
 
     if (
@@ -82,7 +88,7 @@ export async function verifyEmail(req: Request, res: Response) {
     ) {
       return res
         .status(400)
-        .json({ message: "کد نامعتبر است یا منقضی شده است!" });
+        .json({ message: messages.INVALID_OR_EXPIRED_CODE });
     }
 
     user.isEmailVerified = true;
@@ -93,12 +99,12 @@ export async function verifyEmail(req: Request, res: Response) {
     const token = generateToken(user);
 
     return res.status(200).json({
-      message: "اعتبارسنجی ایمیل با موفقیت انجام شد.",
+      message: messages.EMAIL_VERIFICATION_SUCCESS,
       user: filterUser(user),
       token,
     });
   } catch (error) {
-    res.status(500).json({ success: false, error: "خطای ارتباط با سرور." });
+    res.status(500).json({ success: false, error: messages.SERVER_ERROR });
   }
 }
 
@@ -112,7 +118,7 @@ export async function login(req: Request, res: Response) {
     if (!user) {
       return res
         .status(400)
-        .json({ success: false, error: "کاربری با ایمیل مدنظر پیدا نشد!" });
+        .json({ success: false, error: messages.USER_NOT_FOUND_BY_EMAIL });
     }
 
     const isMatchPass = isMatchPassword(password, user.password);
@@ -120,18 +126,18 @@ export async function login(req: Request, res: Response) {
     if (!isMatchPass) {
       return res
         .status(500)
-        .json({ success: false, error: "رمز عبور اشتباه است!" });
+        .json({ success: false, error: messages.INCORRECT_PASSWORD });
     }
 
     const token = generateToken(user);
 
     return res.status(200).json({
-      message: "ورود کاربر با موفقیت انجام شد.",
+      message: messages.LOGIN_SUCCESS,
       user: filterUser(user),
       token,
     });
   } catch (error) {
-    res.status(500).json({ success: false, error: "خطای ارتباط با سرور." });
+    res.status(500).json({ success: false, error: messages.SERVER_ERROR });
   }
 }
 
@@ -143,11 +149,11 @@ export async function getProfile(req: AuthRequest, res: Response) {
 
     res.json({
       success: true,
-      message: "پروفایل با موفقیت دریافت شد.",
+      message: messages.PROFILE_RETRIEVED_SUCCESS,
       data: filteredUser,
     });
   } catch (error) {
-    res.status(500).json({ success: false, error: "خطای ارتباط با سرور." });
+    res.status(500).json({ success: false, error: messages.SERVER_ERROR });
   }
 }
 
@@ -165,36 +171,37 @@ export async function editProfile(req: AuthRequest, res: Response) {
       ) {
         return res.status(409).json({
           success: false,
-          message: "این نام کاربری قبلاً توسط کاربر دیگری ثبت شده است.",
+          message: messages.USERNAME_ALREADY_USED_BY_ANOTHER_USER,
         });
       }
     }
 
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user._id,
-      {
-        ...(username !== undefined && { username }),
-        ...(name !== undefined && { name }),
-        ...(bio !== undefined && { bio }),
-        ...(avatar !== undefined && { avatar }),
-      },
-      { new: true }
-    );
+    const updates: any = {};
+    if (username !== undefined) updates.username = username;
+    if (name !== undefined) updates.name = name;
+    if (bio !== undefined) updates.bio = bio;
+    if (avatar !== undefined) updates.avatar = avatar;
+
+    const updatedUser = await User.findByIdAndUpdate(req.user._id, updates, {
+      new: true,
+    });
 
     if (!updatedUser) {
-      return res.status(404).json({ success: false, error: "کاربر پیدا نشد!" });
+      return res
+        .status(404)
+        .json({ success: false, error: messages.USER_NOT_FOUND });
     }
 
     const filteredUser = filterUser(updatedUser);
 
     res.json({
       success: true,
-      message: "پروفایل با موفقیت ویرایش شد.",
+      message: messages.PROFILE_UPDATED_SUCCESS,
       data: filteredUser,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, error: "خطای ارتباط با سرور." });
+    res.status(500).json({ success: false, error: messages.SERVER_ERROR });
   }
 }
 
@@ -207,18 +214,18 @@ export async function getAllUsers(req: AuthRequest, res: Response) {
       if (typeof id !== "string" || !objectIdPattern.test(id)) {
         return res
           .status(400)
-          .json({ success: false, error: "شناسه کاربر نامعتبر است." });
+          .json({ success: false, error: messages.INVALID_USER_ID });
       }
       const user = await User.findById(id as string);
       if (!user) {
         return res
           .status(404)
-          .json({ success: false, error: "کاربر پیدا نشد!" });
+          .json({ success: false, error: messages.USER_NOT_FOUND });
       }
       return res.json({
         success: true,
-        message: "کاربر با موفقیت پیدا شد.",
-        data: [filterUser(user.toObject())],
+        message: messages.USER_FOUND_SUCCESS,
+        data: [filterUser(user)],
         pagination: { total: 1, page: 1, limit: 1, totalPages: 1 },
       });
     }
@@ -259,7 +266,7 @@ export async function getAllUsers(req: AuthRequest, res: Response) {
     const filteredUsers = users.map((user) => filterUser(user));
     res.json({
       success: true,
-      message: "لیست کاربران با موفقیت دریافت شد.",
+      message: messages.USERS_LIST_RETRIEVED_SUCCESS,
       data: filteredUsers,
       pagination: {
         total,
@@ -269,6 +276,6 @@ export async function getAllUsers(req: AuthRequest, res: Response) {
       },
     });
   } catch (error) {
-    res.status(500).json({ success: false, error: "خطای ارتباط با سرور." });
+    res.status(500).json({ success: false, error: messages.SERVER_ERROR });
   }
 }

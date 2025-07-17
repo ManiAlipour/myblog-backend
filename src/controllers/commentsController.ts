@@ -8,6 +8,7 @@ import {
 } from "../utils/authfunctionalities";
 import { AuthRequest } from "../middleware/authMiddleware";
 import { filterComment } from "../utils/filterMethods";
+import messages from "../utils/constants/messages";
 
 export async function getPostComments(req: Request, res: Response) {
   try {
@@ -16,7 +17,7 @@ export async function getPostComments(req: Request, res: Response) {
     if (!id || !objectIdPattern.test(id)) {
       return res
         .status(400)
-        .json({ success: false, error: "شناسه پست نامعتبر است." });
+        .json({ success: false, error: messages.INVALID_POST_ID });
     }
 
     const comments = await Comment.find({ post: id, isApproved: true })
@@ -24,11 +25,13 @@ export async function getPostComments(req: Request, res: Response) {
       .sort({ createdAt: -1 });
     res.json({
       success: true,
-      message: "لیست نظرات با موفقیت دریافت شد.",
+      message: messages.COMMENTS_LIST_RECEIVED,
       data: comments.map((comment: any) => filterComment(comment)),
     });
   } catch (error) {
-    res.status(500).json({ success: false, error: "خطای ارتباط با سرور." });
+    res
+      .status(500)
+      .json({ success: false, error: messages.SERVER_CONNECTION_ERROR });
   }
 }
 
@@ -44,14 +47,14 @@ export async function addCommentToPost(req: AuthRequest, res: Response) {
     if (!post)
       return res
         .status(404)
-        .json({ success: false, message: "پستی با این شناسه یافت نشد" });
+        .json({ success: false, message: messages.POST_NOT_FOUND });
 
     if (parent) {
       const parentComment = await Comment.findById(parent);
       if (!parentComment || parentComment.post.toString() !== id) {
         return res.status(400).json({
           success: false,
-          message: "کامنت والد یافت نشد یا متعلق به این پست نیست",
+          message: messages.PARENT_COMMENT_NOT_FOUND_OR_NOT_RELATED,
         });
       }
     }
@@ -69,13 +72,13 @@ export async function addCommentToPost(req: AuthRequest, res: Response) {
 
     res.status(201).json({
       success: true,
-      message: "کامنت با موفقیت اضافه شد",
-      data: filterComment(savedComment.toObject()),
+      message: messages.COMMENT_ADDED_SUCCESSFULLY,
+      data: filterComment(savedComment),
     });
   } catch (error) {
     return res
       .status(500)
-      .json({ success: false, message: "خطا در ارتباط با سرور" });
+      .json({ success: false, message: messages.SERVER_CONNECTION_ERROR });
   }
 }
 
@@ -86,14 +89,14 @@ export async function deleteComment(req: AuthRequest, res: Response) {
     if (!objectIdPatternCheck(id))
       return res
         .status(400)
-        .json({ success: false, message: "شناسه کامنت نامعتبر" });
+        .json({ success: false, message: messages.INVALID_COMMENT_ID });
 
     const comment = await Comment.findById(id);
 
     if (!comment)
       return res
         .status(404)
-        .json({ success: false, message: "کامنت یافت نضد" });
+        .json({ success: false, message: messages.COMMENT_NOT_FOUND });
 
     if (
       req.user.id === comment.author.toString() ||
@@ -105,19 +108,19 @@ export async function deleteComment(req: AuthRequest, res: Response) {
 
       return res.json({
         success: true,
-        message: "کامنت با موفقیت حذف شد",
-        data: filterComment(deletedComment.toObject()),
+        message: messages.COMMENT_DELETED_SUCCESSFULLY,
+        data: filterComment(deletedComment),
       });
     }
 
     return res.status(403).json({
       success: false,
-      message: "شما دسترسی به حذف این کامنت را ندارید",
+      message: messages.NO_PERMISSION_TO_DELETE_COMMENT,
     });
   } catch (error) {
     return res
       .status(500)
-      .json({ success: false, message: "خطا در ارتباط با سرور" });
+      .json({ success: false, message: messages.SERVER_CONNECTION_ERROR });
   }
 }
 
@@ -130,32 +133,32 @@ export async function setConfirmComment(req: AuthRequest, res: Response) {
     if (typeof status !== "boolean")
       return res.status(400).json({
         success: false,
-        message: "مقدار وضعیت نامعتبر وارد شده است",
+        message: messages.INVALID_STATUS_VALUE,
       });
 
     if (!objectIdPatternCheck(id))
       return res
         .status(400)
-        .json({ success: false, message: "شناسه کامنت نامعتبر" });
+        .json({ success: false, message: messages.INVALID_COMMENT_ID });
 
     const comment = await Comment.findById(id);
 
     if (!comment)
       return res
         .status(404)
-        .json({ success: false, message: "کامنت یافت نشد" });
+        .json({ success: false, message: messages.COMMENT_NOT_FOUND });
 
     comment.isApproved = status;
     const savedComment = await comment.save();
 
     return res.json({
       success: true,
-      message: "وضعیت کامنت با موفقیت تغییر کرد.",
-      data: filterComment(savedComment.toObject()),
+      message: messages.COMMENT_STATUS_CHANGED,
+      data: filterComment(savedComment),
     });
   } catch (error) {
     return res
       .status(500)
-      .json({ success: false, message: "خطا در ارتباط با سرور" });
+      .json({ success: false, message: messages.SERVER_CONNECTION_ERROR });
   }
 }

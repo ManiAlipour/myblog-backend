@@ -4,6 +4,7 @@ import { filterPost } from "../utils/filterMethods";
 import { AuthRequest } from "../middleware/authMiddleware";
 import _ from "lodash";
 import { useValidationResult } from "../utils/authfunctionalities";
+import messages from "../utils/constants/messages";
 
 export async function getAllPosts(req: Request, res: Response) {
   try {
@@ -60,7 +61,7 @@ export async function getAllPosts(req: Request, res: Response) {
 
     res.json({
       success: true,
-      message: "لیست پست‌ها با موفقیت دریافت شد.",
+      message: messages.POSTS_LIST_RETRIEVED,
       data: posts.map((post) => filterPost(post)),
       pagination: {
         total,
@@ -70,7 +71,9 @@ export async function getAllPosts(req: Request, res: Response) {
       },
     });
   } catch (error) {
-    res.status(500).json({ success: false, error: "خطای ارتباط با سرور." });
+    res
+      .status(500)
+      .json({ success: false, error: messages.SERVER_CONNECTION_ERROR });
   }
 }
 
@@ -81,21 +84,25 @@ export async function getOnePost(req: Request, res: Response) {
     if (!id || !objectIdPattern.test(id)) {
       return res
         .status(400)
-        .json({ success: false, error: "شناسه پست نامعتبر است." });
+        .json({ success: false, error: messages.INVALID_POST_ID });
     }
     const post = await Post.findById(id)
       .populate("author", "username name")
       .populate("categories", "name");
     if (!post) {
-      return res.status(404).json({ success: false, error: "پست پیدا نشد!" });
+      return res
+        .status(404)
+        .json({ success: false, error: messages.POST_NOT_FOUND });
     }
     res.json({
       success: true,
-      message: "پست با موفقیت دریافت شد.",
+      message: messages.POST_RETRIEVED,
       data: filterPost(post),
     });
   } catch (error) {
-    res.status(500).json({ success: false, error: "خطای ارتباط با سرور." });
+    res
+      .status(500)
+      .json({ success: false, error: messages.SERVER_CONNECTION_ERROR });
   }
 }
 
@@ -111,7 +118,7 @@ export async function addNewPost(req: AuthRequest, res: Response) {
     if (postWithSlug)
       return res.status(409).json({
         success: false,
-        message: "پست با این اسلاگ قبلا ثبت شده است",
+        message: messages.POST_WITH_SAME_SLUG_EXISTS,
       });
 
     const post = new Post({
@@ -129,11 +136,13 @@ export async function addNewPost(req: AuthRequest, res: Response) {
 
     res.json({
       success: true,
-      message: "پست با موفقیت افزوده شد",
-      data: filterPost(savedPost.toObject()),
+      message: messages.POST_ADDED,
+      data: filterPost(savedPost),
     });
   } catch (error) {
-    res.status(500).json({ success: false, error: "خطای ارتباط با سرور." });
+    res
+      .status(500)
+      .json({ success: false, error: messages.SERVER_CONNECTION_ERROR });
   }
 }
 
@@ -145,13 +154,15 @@ export async function editPost(req: AuthRequest, res: Response) {
   if (!id || !objectIdPattern.test(id)) {
     return res
       .status(400)
-      .json({ success: false, error: "شناسه پست نامعتبر است." });
+      .json({ success: false, error: messages.INVALID_POST_ID });
   }
 
   try {
     const post = await Post.findById(id);
     if (!post) {
-      return res.status(404).json({ success: false, error: "پست پیدا نشد!" });
+      return res
+        .status(404)
+        .json({ success: false, error: messages.POST_NOT_FOUND });
     }
     if (
       post.author.toString() !== req.user._id.toString() &&
@@ -159,7 +170,7 @@ export async function editPost(req: AuthRequest, res: Response) {
     ) {
       return res
         .status(403)
-        .json({ success: false, error: "شما اجازه ویرایش این پست را ندارید." });
+        .json({ success: false, error: messages.NO_PERMISSION_TO_EDIT_POST });
     }
 
     if (req.body.slug && req.body.slug !== post.slug) {
@@ -170,7 +181,7 @@ export async function editPost(req: AuthRequest, res: Response) {
       if (duplicate)
         return res
           .status(409)
-          .json({ success: false, error: "اسلاگ وارد شده تکراری است." });
+          .json({ success: false, error: messages.DUPLICATE_SLUG });
     }
 
     const updatableFields = [
@@ -194,11 +205,13 @@ export async function editPost(req: AuthRequest, res: Response) {
     await post.populate("categories", "name");
     res.json({
       success: true,
-      message: "پست با موفقیت ویرایش شد.",
+      message: messages.POST_EDITED,
       data: filterPost(post),
     });
   } catch (error) {
-    res.status(500).json({ success: false, error: "خطای ارتباط با سرور." });
+    res
+      .status(500)
+      .json({ success: false, error: messages.SERVER_CONNECTION_ERROR });
   }
 }
 
@@ -209,19 +222,23 @@ export async function deletePost(req: Request, res: Response) {
     if (!id || !objectIdPattern.test(id)) {
       return res
         .status(400)
-        .json({ success: false, error: "شناسه پست نامعتبر است." });
+        .json({ success: false, error: messages.INVALID_POST_ID });
     }
     const post = await Post.findById(id);
     if (!post) {
-      return res.status(404).json({ success: false, error: "پست پیدا نشد!" });
+      return res
+        .status(404)
+        .json({ success: false, error: messages.POST_NOT_FOUND });
     }
     await Post.findByIdAndDelete(id);
     res.json({
       success: true,
-      message: "پست با موفقیت حذف شد.",
-      data: filterPost(post.toObject()),
+      message: messages.POST_DELETED,
+      data: filterPost(post),
     });
   } catch (error) {
-    res.status(500).json({ success: false, error: "خطای ارتباط با سرور." });
+    res
+      .status(500)
+      .json({ success: false, error: messages.SERVER_CONNECTION_ERROR });
   }
 }

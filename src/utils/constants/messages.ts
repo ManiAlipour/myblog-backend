@@ -1,0 +1,64 @@
+const messages = {
+  SUCCESS: "عملیات با موفقیت انجام شد.",
+  ERROR: "خطایی رخ داده است.",
+  NOT_FOUND: "موردی یافت نشد.",
+  UNAUTHORIZED: "دسترسی غیرمجاز.",
+  FORBIDDEN: "شما اجازه دسترسی به این بخش را ندارید.",
+  VALIDATION_ERROR: "اطلاعات وارد شده معتبر نیست.",
+  LOGIN_SUCCESS: "ورود با موفقیت انجام شد.",
+  LOGIN_FAILED: "نام کاربری یا رمز عبور اشتباه است.",
+  REGISTER_SUCCESS: "ثبت‌نام با موفقیت انجام شد.",
+  REGISTER_FAILED: "ثبت‌نام انجام نشد.",
+  LOGOUT_SUCCESS: "خروج با موفقیت انجام شد.",
+  UPDATE_SUCCESS: "بروزرسانی با موفقیت انجام شد.",
+  DELETE_SUCCESS: "حذف با موفقیت انجام شد.",
+  ALREADY_EXISTS: "این مورد قبلاً ثبت شده است.",
+  PASSWORD_CHANGED: "رمز عبور با موفقیت تغییر کرد.",
+  PASSWORD_INCORRECT: "رمز عبور فعلی اشتباه است.",
+
+  // UserController
+  SERVER_ERROR: "خطای ارتباط با سرور.",
+  USER_NOT_FOUND: "کاربر پیدا نشد!",
+  VERIFICATION_CODE_NOT_SET: "کد ورودی برای کاربر ست نشده است.",
+  INVALID_OR_EXPIRED_CODE: "کد نامعتبر است یا منقضی شده است!",
+  EMAIL_VERIFICATION_SUCCESS: "اعتبارسنجی ایمیل با موفقیت انجام شد.",
+  USER_NOT_FOUND_BY_EMAIL: "کاربری با ایمیل مدنظر پیدا نشد!",
+  INCORRECT_PASSWORD: "رمز عبور اشتباه است!",
+  PROFILE_RETRIEVED_SUCCESS: "پروفایل با موفقیت دریافت شد.",
+  USERNAME_ALREADY_USED_BY_ANOTHER_USER:
+    "این نام کاربری قبلاً توسط کاربر دیگری ثبت شده است.",
+  PROFILE_UPDATED_SUCCESS: "پروفایل با موفقیت ویرایش شد.",
+  INVALID_USER_ID: "شناسه کاربر نامعتبر است.",
+  USER_FOUND_SUCCESS: "کاربر با موفقیت پیدا شد.",
+  USERS_LIST_RETRIEVED_SUCCESS: "لیست کاربران با موفقیت دریافت شد.",
+
+  // PostsController
+  POSTS_LIST_RETRIEVED: "لیست پست‌ها با موفقیت دریافت شد.",
+  SERVER_CONNECTION_ERROR: "خطای ارتباط با سرور.",
+  INVALID_POST_ID: "شناسه پست نامعتبر است.",
+  POST_NOT_FOUND: "پست پیدا نشد!",
+  POST_RETRIEVED: "پست با موفقیت دریافت شد.",
+  POST_WITH_SAME_SLUG_EXISTS: "پست با این اسلاگ قبلا ثبت شده است.",
+  POST_ADDED: "پست با موفقیت افزوده شد.",
+  NO_PERMISSION_TO_EDIT_POST: "شما اجازه ویرایش این پست را ندارید.",
+  DUPLICATE_SLUG: "اسلاگ وارد شده تکراری است.",
+  POST_EDITED: "پست با موفقیت ویرایش شد.",
+  POST_DELETED: "پست با موفقیت حذف شد.",
+
+  // CommentsController
+  COMMENTS_LIST_RECEIVED: "لیست نظرات با موفقیت دریافت شد.",
+  INVALID_COMMENT_ID: "شناسه کامنت نامعتبر است.",
+  COMMENT_NOT_FOUND: "کامنت یافت نشد.",
+  PARENT_COMMENT_NOT_FOUND_OR_NOT_RELATED:
+    "کامنت والد یافت نشد یا متعلق به این پست نیست.",
+  COMMENT_ADDED_SUCCESSFULLY: "کامنت با موفقیت اضافه شد.",
+  COMMENT_DELETED_SUCCESSFULLY: "کامنت با موفقیت حذف شد.",
+  NO_PERMISSION_TO_DELETE_COMMENT: "شما دسترسی به حذف این کامنت را ندارید.",
+  INVALID_STATUS_VALUE: "مقدار وضعیت نامعتبر وارد شده است.",
+  COMMENT_STATUS_CHANGED: "وضعیت کامنت با موفقیت تغییر کرد.",
+
+  // MetaController
+  ERROR_FETCHING_CATEGORIES: "خطا در دریافت دسته‌بندی‌ها.",
+};
+
+export default messages;
