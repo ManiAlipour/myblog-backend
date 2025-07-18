@@ -26,6 +26,23 @@ export const allowedCommentFields = [
   "isApproved",
 ];
 
+export const allowedCategoryFields = [
+  "_id",
+  "name",
+  "slug",
+  "description",
+  "createdAt",
+  "updatedAt",
+];
+
+export const allowedTagFields = [
+  "_id",
+  "name",
+  "slug",
+  "createdAt",
+  "updatedAt",
+];
+
 export const SENSITIVE_USER_FIELDS = [
   "password",
   "verificationCode",

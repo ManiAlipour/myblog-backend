@@ -3,7 +3,11 @@ import Post from "../models/Post";
 import { filterPost } from "../utils/filterMethods";
 import { AuthRequest } from "../middleware/authMiddleware";
 import _ from "lodash";
-import { useValidationResult } from "../utils/authfunctionalities";
+import {
+  useValidationResult,
+  handleError,
+  handleSuccess,
+} from "../utils/authfunctionalities";
 import messages from "../utils/constants/messages";
 
 export async function getAllPosts(req: Request, res: Response) {
@@ -59,21 +63,14 @@ export async function getAllPosts(req: Request, res: Response) {
       Post.countDocuments(query),
     ]);
 
-    res.json({
-      success: true,
-      message: messages.POSTS_LIST_RETRIEVED,
-      data: posts.map((post) => filterPost(post)),
-      pagination: {
-        total,
-        page: pageNum,
-        limit: limitNum,
-        totalPages: Math.ceil(total / limitNum),
-      },
-    });
+    handleSuccess(
+      res,
+      posts.map((post) => filterPost(post)),
+      messages.POSTS_LIST_RETRIEVED,
+      200
+    );
   } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, error: messages.SERVER_CONNECTION_ERROR });
+    handleError(res, error, 500, messages.SERVER_CONNECTION_ERROR);
   }
 }
 
@@ -82,27 +79,17 @@ export async function getOnePost(req: Request, res: Response) {
     const { id } = req.params;
     const objectIdPattern = /^[0-9a-fA-F]{24}$/;
     if (!id || !objectIdPattern.test(id)) {
-      return res
-        .status(400)
-        .json({ success: false, error: messages.INVALID_POST_ID });
+      return handleError(res, null, 400, messages.INVALID_POST_ID);
     }
     const post = await Post.findById(id)
       .populate("author", "username name")
       .populate("categories", "name");
     if (!post) {
-      return res
-        .status(404)
-        .json({ success: false, error: messages.POST_NOT_FOUND });
+      return handleError(res, null, 404, messages.POST_NOT_FOUND);
     }
-    res.json({
-      success: true,
-      message: messages.POST_RETRIEVED,
-      data: filterPost(post),
-    });
+    handleSuccess(res, filterPost(post), messages.POST_RETRIEVED, 200);
   } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, error: messages.SERVER_CONNECTION_ERROR });
+    handleError(res, error, 500, messages.SERVER_CONNECTION_ERROR);
   }
 }
 
@@ -116,10 +103,7 @@ export async function addNewPost(req: AuthRequest, res: Response) {
     const postWithSlug = await Post.findOne({ slug });
 
     if (postWithSlug)
-      return res.status(409).json({
-        success: false,
-        message: messages.POST_WITH_SAME_SLUG_EXISTS,
-      });
+      return handleError(res, null, 409, messages.POST_WITH_SAME_SLUG_EXISTS);
 
     const post = new Post({
       title,
@@ -134,15 +118,9 @@ export async function addNewPost(req: AuthRequest, res: Response) {
 
     const savedPost = await post.save();
 
-    res.json({
-      success: true,
-      message: messages.POST_ADDED,
-      data: filterPost(savedPost),
-    });
+    handleSuccess(res, filterPost(savedPost), messages.POST_ADDED, 201);
   } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, error: messages.SERVER_CONNECTION_ERROR });
+    handleError(res, error, 500, messages.SERVER_CONNECTION_ERROR);
   }
 }
 
@@ -152,25 +130,19 @@ export async function editPost(req: AuthRequest, res: Response) {
   const { id } = req.params;
   const objectIdPattern = /^[0-9a-fA-F]{24}$/;
   if (!id || !objectIdPattern.test(id)) {
-    return res
-      .status(400)
-      .json({ success: false, error: messages.INVALID_POST_ID });
+    return handleError(res, null, 400, messages.INVALID_POST_ID);
   }
 
   try {
     const post = await Post.findById(id);
     if (!post) {
-      return res
-        .status(404)
-        .json({ success: false, error: messages.POST_NOT_FOUND });
+      return handleError(res, null, 404, messages.POST_NOT_FOUND);
     }
     if (
       post.author.toString() !== req.user._id.toString() &&
       req.user.role !== "admin"
     ) {
-      return res
-        .status(403)
-        .json({ success: false, error: messages.NO_PERMISSION_TO_EDIT_POST });
+      return handleError(res, null, 403, messages.NO_PERMISSION_TO_EDIT_POST);
     }
 
     if (req.body.slug && req.body.slug !== post.slug) {
@@ -179,9 +151,7 @@ export async function editPost(req: AuthRequest, res: Response) {
         _id: { $ne: post._id },
       });
       if (duplicate)
-        return res
-          .status(409)
-          .json({ success: false, error: messages.DUPLICATE_SLUG });
+        return handleError(res, null, 409, messages.DUPLICATE_SLUG);
     }
 
     const updatableFields = [
@@ -203,15 +173,9 @@ export async function editPost(req: AuthRequest, res: Response) {
 
     await post.populate("author", "username name");
     await post.populate("categories", "name");
-    res.json({
-      success: true,
-      message: messages.POST_EDITED,
-      data: filterPost(post),
-    });
+    handleSuccess(res, filterPost(post), messages.POST_EDITED, 200);
   } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, error: messages.SERVER_CONNECTION_ERROR });
+    handleError(res, error, 500, messages.SERVER_CONNECTION_ERROR);
   }
 }
 
@@ -220,25 +184,15 @@ export async function deletePost(req: Request, res: Response) {
     const { id } = req.params;
     const objectIdPattern = /^[0-9a-fA-F]{24}$/;
     if (!id || !objectIdPattern.test(id)) {
-      return res
-        .status(400)
-        .json({ success: false, error: messages.INVALID_POST_ID });
+      return handleError(res, null, 400, messages.INVALID_POST_ID);
     }
     const post = await Post.findById(id);
     if (!post) {
-      return res
-        .status(404)
-        .json({ success: false, error: messages.POST_NOT_FOUND });
+      return handleError(res, null, 404, messages.POST_NOT_FOUND);
     }
     await Post.findByIdAndDelete(id);
-    res.json({
-      success: true,
-      message: messages.POST_DELETED,
-      data: filterPost(post),
-    });
+    handleSuccess(res, filterPost(post), messages.POST_DELETED, 200);
   } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, error: messages.SERVER_CONNECTION_ERROR });
+    handleError(res, error, 500, messages.SERVER_CONNECTION_ERROR);
   }
 }

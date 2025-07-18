@@ -3,6 +3,8 @@ import {
   allowedCommentFields,
   allowedPostFields,
   SENSITIVE_USER_FIELDS,
+  allowedCategoryFields,
+  allowedTagFields,
 } from "./constants/fields";
 import { IPost } from "../models/Post";
 
@@ -22,6 +24,25 @@ export function filterPost(post: IPost) {
 
   const obj = typeof post.toObject === "function" ? post.toObject() : post;
   const picked = _.pick(obj, allowedPostFields);
+  picked.id = picked._id?.toString();
+  delete picked._id;
+  return picked;
+}
+
+export function filterCategory(category: any) {
+  if (!category) return null;
+  const obj =
+    typeof category.toObject === "function" ? category.toObject() : category;
+  const picked = _.pick(obj, allowedCategoryFields);
+  picked.id = picked._id?.toString();
+  delete picked._id;
+  return picked;
+}
+
+export function filterTag(tag: any) {
+  if (!tag) return null;
+  const obj = typeof tag.toObject === "function" ? tag.toObject() : tag;
+  const picked = _.pick(obj, allowedTagFields);
   picked.id = picked._id?.toString();
   delete picked._id;
   return picked;

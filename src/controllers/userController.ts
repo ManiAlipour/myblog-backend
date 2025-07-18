@@ -6,6 +6,8 @@ import {
   isMatchPassword,
   sendVerificationCode,
   useValidationResult,
+  handleError,
+  handleSuccess,
 } from "../utils/authfunctionalities";
 import { filterUser } from "../utils/filterMethods";
 import { AuthRequest } from "../middleware/authMiddleware";
@@ -27,17 +29,19 @@ export async function addNewUser(req: Request, res: Response) {
     if (existingUser) {
       const isEmailUsed = existingUser.email === email.toLowerCase();
       const message = isEmailUsed ? MSG_EMAIL_USED : MSG_USERNAME_USED;
-      return res.status(409).json({ success: false, message });
+      return handleError(res, null, 409, message);
     }
 
     const hashedPassword = await hashPassword(password);
     const code = await sendVerificationCode(email);
 
     if (!code) {
-      return res.status(500).json({
-        success: false,
-        message: "ارسال ایمیل تایید انجام نشد. لطفاً کمی بعد دوباره تلاش کنید.",
-      });
+      return handleError(
+        res,
+        null,
+        500,
+        "ارسال ایمیل تایید انجام نشد. لطفاً کمی بعد دوباره تلاش کنید."
+      );
     }
 
     const user = new User({
@@ -56,13 +60,9 @@ export async function addNewUser(req: Request, res: Response) {
 
     const filteredUser = filterUser(savedUser);
 
-    res.json({
-      success: true,
-      message: messages.SUCCESS,
-      user: filteredUser,
-    });
+    handleSuccess(res, filteredUser, messages.SUCCESS, 201);
   } catch (error) {
-    res.status(500).json({ success: false, message: messages.SERVER_ERROR });
+    handleError(res, error, 500, messages.SERVER_ERROR);
   }
 }
 
@@ -73,22 +73,18 @@ export async function verifyEmail(req: Request, res: Response) {
     const user = await User.findOne({ email: email?.toLowerCase().trim() });
 
     if (!user) {
-      return res.status(404).json({ message: messages.USER_NOT_FOUND });
+      return handleError(res, null, 404, messages.USER_NOT_FOUND);
     }
 
     if (!user.verificationCode || !user.verificationCodeExpires) {
-      return res
-        .status(400)
-        .json({ message: messages.VERIFICATION_CODE_NOT_SET });
+      return handleError(res, null, 400, messages.VERIFICATION_CODE_NOT_SET);
     }
 
     if (
       user.verificationCode !== code ||
       user.verificationCodeExpires < new Date()
     ) {
-      return res
-        .status(400)
-        .json({ message: messages.INVALID_OR_EXPIRED_CODE });
+      return handleError(res, null, 400, messages.INVALID_OR_EXPIRED_CODE);
     }
 
     user.isEmailVerified = true;
@@ -98,13 +94,14 @@ export async function verifyEmail(req: Request, res: Response) {
 
     const token = generateToken(user);
 
-    return res.status(200).json({
-      message: messages.EMAIL_VERIFICATION_SUCCESS,
-      user: filterUser(user),
-      token,
-    });
+    return handleSuccess(
+      res,
+      { user: filterUser(user), token },
+      messages.EMAIL_VERIFICATION_SUCCESS,
+      200
+    );
   } catch (error) {
-    res.status(500).json({ success: false, error: messages.SERVER_ERROR });
+    handleError(res, error, 500, messages.SERVER_ERROR);
   }
 }
 
@@ -116,28 +113,25 @@ export async function login(req: Request, res: Response) {
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      return res
-        .status(400)
-        .json({ success: false, error: messages.USER_NOT_FOUND_BY_EMAIL });
+      return handleError(res, null, 400, messages.USER_NOT_FOUND_BY_EMAIL);
     }
 
     const isMatchPass = isMatchPassword(password, user.password);
 
     if (!isMatchPass) {
-      return res
-        .status(500)
-        .json({ success: false, error: messages.INCORRECT_PASSWORD });
+      return handleError(res, null, 500, messages.INCORRECT_PASSWORD);
     }
 
     const token = generateToken(user);
 
-    return res.status(200).json({
-      message: messages.LOGIN_SUCCESS,
-      user: filterUser(user),
-      token,
-    });
+    return handleSuccess(
+      res,
+      { user: filterUser(user), token },
+      messages.LOGIN_SUCCESS,
+      200
+    );
   } catch (error) {
-    res.status(500).json({ success: false, error: messages.SERVER_ERROR });
+    handleError(res, error, 500, messages.SERVER_ERROR);
   }
 }
 
@@ -147,13 +141,14 @@ export async function getProfile(req: AuthRequest, res: Response) {
   try {
     const filteredUser = filterUser(user);
 
-    res.json({
-      success: true,
-      message: messages.PROFILE_RETRIEVED_SUCCESS,
-      data: filteredUser,
-    });
+    return handleSuccess(
+      res,
+      filteredUser,
+      messages.PROFILE_RETRIEVED_SUCCESS,
+      200
+    );
   } catch (error) {
-    res.status(500).json({ success: false, error: messages.SERVER_ERROR });
+    handleError(res, error, 500, messages.SERVER_ERROR);
   }
 }
 
@@ -169,10 +164,12 @@ export async function editProfile(req: AuthRequest, res: Response) {
         userWithSameUsername &&
         userWithSameUsername._id.toString() !== req.user._id.toString()
       ) {
-        return res.status(409).json({
-          success: false,
-          message: messages.USERNAME_ALREADY_USED_BY_ANOTHER_USER,
-        });
+        return handleError(
+          res,
+          null,
+          409,
+          messages.USERNAME_ALREADY_USED_BY_ANOTHER_USER
+        );
       }
     }
 
@@ -187,21 +184,20 @@ export async function editProfile(req: AuthRequest, res: Response) {
     });
 
     if (!updatedUser) {
-      return res
-        .status(404)
-        .json({ success: false, error: messages.USER_NOT_FOUND });
+      return handleError(res, null, 404, messages.USER_NOT_FOUND);
     }
 
     const filteredUser = filterUser(updatedUser);
 
-    res.json({
-      success: true,
-      message: messages.PROFILE_UPDATED_SUCCESS,
-      data: filteredUser,
-    });
+    return handleSuccess(
+      res,
+      filteredUser,
+      messages.PROFILE_UPDATED_SUCCESS,
+      200
+    );
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, error: messages.SERVER_ERROR });
+    handleError(res, error, 500, messages.SERVER_ERROR);
   }
 }
 
@@ -212,22 +208,18 @@ export async function getAllUsers(req: AuthRequest, res: Response) {
     if (id) {
       const objectIdPattern = /^[0-9a-fA-F]{24}$/;
       if (typeof id !== "string" || !objectIdPattern.test(id)) {
-        return res
-          .status(400)
-          .json({ success: false, error: messages.INVALID_USER_ID });
+        return handleError(res, null, 400, messages.INVALID_USER_ID);
       }
       const user = await User.findById(id as string);
       if (!user) {
-        return res
-          .status(404)
-          .json({ success: false, error: messages.USER_NOT_FOUND });
+        return handleError(res, null, 404, messages.USER_NOT_FOUND);
       }
-      return res.json({
-        success: true,
-        message: messages.USER_FOUND_SUCCESS,
-        data: [filterUser(user)],
-        pagination: { total: 1, page: 1, limit: 1, totalPages: 1 },
-      });
+      return handleSuccess(
+        res,
+        [filterUser(user)],
+        messages.USER_FOUND_SUCCESS,
+        200
+      );
     }
 
     // Search by text (username, name, email)
@@ -264,18 +256,21 @@ export async function getAllUsers(req: AuthRequest, res: Response) {
     ]);
 
     const filteredUsers = users.map((user) => filterUser(user));
-    res.json({
-      success: true,
-      message: messages.USERS_LIST_RETRIEVED_SUCCESS,
-      data: filteredUsers,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
+    return handleSuccess(
+      res,
+      {
+        data: filteredUsers,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+        },
       },
-    });
+      messages.USERS_LIST_RETRIEVED_SUCCESS,
+      200
+    );
   } catch (error) {
-    res.status(500).json({ success: false, error: messages.SERVER_ERROR });
+    handleError(res, error, 500, messages.SERVER_ERROR);
   }
 }

@@ -6,6 +6,7 @@ import Comment from "../models/Comment";
 import { validationResult } from "express-validator";
 import { Request, Response } from "express";
 import { AuthRequest } from "../middleware/authMiddleware";
+import messages from "./constants/messages";
 
 export const hashPassword = async (plainPassword: string) => {
   const salt = await bcrypt.genSalt(10);
@@ -109,3 +110,26 @@ export const useValidationResult = ({ req, res }: TValidationProps) => {
   }
   return false;
 };
+
+export function handleError(
+  res: any,
+  error: any,
+  statusCode: number = 500,
+  message: string = "خطای سرور"
+) {
+  if (process.env.NODE_ENV !== "production") {
+    console.error(error);
+  }
+  return res.status(statusCode).json({ success: false, message });
+}
+
+export function handleSuccess(
+  res: any,
+  data: any = null,
+  message: string = "عملیات با موفقیت انجام شد.",
+  statusCode: number = 200
+) {
+  return res
+    .status(statusCode)
+    .json({ success: true, message, ...(data !== null ? { data } : {}) });
+}

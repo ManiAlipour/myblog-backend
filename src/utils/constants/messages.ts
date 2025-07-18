@@ -58,7 +58,24 @@ const messages = {
   COMMENT_STATUS_CHANGED: "وضعیت کامنت با موفقیت تغییر کرد.",
 
   // MetaController
+  // Category (دسته‌بندی)
   ERROR_FETCHING_CATEGORIES: "خطا در دریافت دسته‌بندی‌ها.",
+  INVALID_CATEGORY_ID: "شناسه ی دسته بندی نامعتبر.",
+  CATEGORY_LIST_RETRIEVED: "لیست دسته‌بندی‌ها با موفقیت دریافت شد.",
+  CATEGORY_ADDED: "دسته‌بندی با موفقیت افزوده شد.",
+  CATEGORY_EXISTS: "دسته‌بندی با این اسلاگ قبلاً ثبت شده است.",
+  CATEGORY_NOT_FOUND: "دسته‌بندی پیدا نشد!",
+  CATEGORY_EDITED: "دسته‌بندی با موفقیت ویرایش شد.",
+  CATEGORY_DELETED: "دسته‌بندی با موفقیت حذف شد.",
+
+  // Tag (برچسب)
+  TAG_LIST_RETRIEVED: "لیست برچسب‌ها با موفقیت دریافت شد.",
+  INVALID_TAG_ID: "شناسه ی برچسب نامعتبر.",
+  TAG_ADDED: "برچسب با موفقیت افزوده شد.",
+  TAG_EXISTS: "برچسب با این اسلاگ قبلاً ثبت شده است.",
+  TAG_NOT_FOUND: "برچسب پیدا نشد!",
+  TAG_EDITED: "برچسب با موفقیت ویرایش شد.",
+  TAG_DELETED: "برچسب با موفقیت حذف شد.",
 };
 
 export default messages;
