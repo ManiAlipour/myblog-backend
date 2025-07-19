@@ -1,16 +1,16 @@
 import { Request, Response } from "express";
-import Comment from "../models/Comment";
-import Post from "../models/Post";
+import Comment from "../../models/Comment";
+import Post from "../../models/Post";
 import {
   deleteCommentAndChildren,
   objectIdPatternCheck,
   useValidationResult,
   handleError,
   handleSuccess,
-} from "../utils/authfunctionalities";
-import { AuthRequest } from "../middleware/authMiddleware";
-import { filterComment } from "../utils/filterMethods";
-import messages, { STATUS_CODES } from "../utils/constants/messages";
+} from "../../utils/authfunctionalities";
+import { AuthRequest } from "../../middleware/authMiddleware";
+import { filterComment } from "../../utils/filterMethods";
+import messages, { STATUS_CODES } from "../../utils/constants/messages";
 
 export async function getPostComments(req: Request, res: Response) {
   try {

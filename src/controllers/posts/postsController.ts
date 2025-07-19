@@ -1,14 +1,14 @@
 import { Request, Response } from "express";
-import Post from "../models/Post";
-import { filterPost } from "../utils/filterMethods";
-import { AuthRequest } from "../middleware/authMiddleware";
+import Post from "../../models/Post";
+import { filterPost } from "../../utils/filterMethods";
+import { AuthRequest } from "../../middleware/authMiddleware";
 import _ from "lodash";
 import {
   useValidationResult,
   handleError,
   handleSuccess,
-} from "../utils/authfunctionalities";
-import messages, { STATUS_CODES } from "../utils/constants/messages";
+} from "../../utils/authfunctionalities";
+import messages, { STATUS_CODES } from "../../utils/constants/messages";
 
 export async function getAllPosts(req: Request, res: Response) {
   try {
