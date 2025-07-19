@@ -10,14 +10,14 @@ import {
 } from "../utils/authfunctionalities";
 import { AuthRequest } from "../middleware/authMiddleware";
 import { filterComment } from "../utils/filterMethods";
-import messages from "../utils/constants/messages";
+import messages, { STATUS_CODES } from "../utils/constants/messages";
 
 export async function getPostComments(req: Request, res: Response) {
   try {
     const { id } = req.params;
     const objectIdPattern = /^[0-9a-fA-F]{24}$/;
     if (!id || !objectIdPattern.test(id)) {
-      return handleError(res, null, 400, messages.INVALID_POST_ID);
+      return handleError(res, null, STATUS_CODES.BAD_REQUEST, messages.INVALID_POST_ID);
     }
 
     const comments = await Comment.find({ post: id, isApproved: true })
@@ -27,10 +27,10 @@ export async function getPostComments(req: Request, res: Response) {
       res,
       comments.map((comment: any) => filterComment(comment)),
       messages.COMMENTS_LIST_RECEIVED,
-      200
+      STATUS_CODES.OK
     );
   } catch (error) {
-    handleError(res, error, 500, messages.SERVER_CONNECTION_ERROR);
+    handleError(res, error, STATUS_CODES.INTERNAL_SERVER_ERROR, messages.SERVER_CONNECTION_ERROR);
   }
 }
 
@@ -43,7 +43,7 @@ export async function addCommentToPost(req: AuthRequest, res: Response) {
   try {
     const post = await Post.findById(id);
 
-    if (!post) return handleError(res, null, 404, messages.POST_NOT_FOUND);
+    if (!post) return handleError(res, null, STATUS_CODES.NOT_FOUND, messages.POST_NOT_FOUND);
 
     if (parent) {
       const parentComment = await Comment.findById(parent);
@@ -51,7 +51,7 @@ export async function addCommentToPost(req: AuthRequest, res: Response) {
         return handleError(
           res,
           null,
-          400,
+          STATUS_CODES.BAD_REQUEST,
           messages.PARENT_COMMENT_NOT_FOUND_OR_NOT_RELATED
         );
       }
@@ -72,10 +72,10 @@ export async function addCommentToPost(req: AuthRequest, res: Response) {
       res,
       filterComment(savedComment),
       messages.COMMENT_ADDED_SUCCESSFULLY,
-      201
+      STATUS_CODES.CREATED
     );
   } catch (error) {
-    handleError(res, error, 500, messages.SERVER_CONNECTION_ERROR);
+    handleError(res, error, STATUS_CODES.INTERNAL_SERVER_ERROR, messages.SERVER_CONNECTION_ERROR);
   }
 }
 
@@ -84,12 +84,12 @@ export async function deleteComment(req: AuthRequest, res: Response) {
 
   try {
     if (!objectIdPatternCheck(id))
-      return handleError(res, null, 400, messages.INVALID_COMMENT_ID);
+      return handleError(res, null, STATUS_CODES.BAD_REQUEST, messages.INVALID_COMMENT_ID);
 
     const comment = await Comment.findById(id);
 
     if (!comment)
-      return handleError(res, null, 404, messages.COMMENT_NOT_FOUND);
+      return handleError(res, null, STATUS_CODES.NOT_FOUND, messages.COMMENT_NOT_FOUND);
 
     if (
       req.user.id === comment.author.toString() ||
@@ -103,7 +103,7 @@ export async function deleteComment(req: AuthRequest, res: Response) {
         res,
         filterComment(deletedComment),
         messages.COMMENT_DELETED_SUCCESSFULLY,
-        200
+        STATUS_CODES.OK
       );
       return;
     }
@@ -111,11 +111,11 @@ export async function deleteComment(req: AuthRequest, res: Response) {
     return handleError(
       res,
       null,
-      403,
+      STATUS_CODES.FORBIDDEN,
       messages.NO_PERMISSION_TO_DELETE_COMMENT
     );
   } catch (error) {
-    handleError(res, error, 500, messages.SERVER_CONNECTION_ERROR);
+    handleError(res, error, STATUS_CODES.INTERNAL_SERVER_ERROR, messages.SERVER_CONNECTION_ERROR);
   }
 }
 
@@ -126,15 +126,15 @@ export async function setConfirmComment(req: AuthRequest, res: Response) {
 
   try {
     if (typeof status !== "boolean")
-      return handleError(res, null, 400, messages.INVALID_STATUS_VALUE);
+      return handleError(res, null, STATUS_CODES.BAD_REQUEST, messages.INVALID_STATUS_VALUE);
 
     if (!objectIdPatternCheck(id))
-      return handleError(res, null, 400, messages.INVALID_COMMENT_ID);
+      return handleError(res, null, STATUS_CODES.BAD_REQUEST, messages.INVALID_COMMENT_ID);
 
     const comment = await Comment.findById(id);
 
     if (!comment)
-      return handleError(res, null, 404, messages.COMMENT_NOT_FOUND);
+      return handleError(res, null, STATUS_CODES.NOT_FOUND, messages.COMMENT_NOT_FOUND);
 
     comment.isApproved = status;
     const savedComment = await comment.save();
@@ -143,10 +143,10 @@ export async function setConfirmComment(req: AuthRequest, res: Response) {
       res,
       filterComment(savedComment),
       messages.COMMENT_STATUS_CHANGED,
-      200
+      STATUS_CODES.OK
     );
     return;
   } catch (error) {
-    handleError(res, error, 500, messages.SERVER_CONNECTION_ERROR);
+    handleError(res, error, STATUS_CODES.INTERNAL_SERVER_ERROR, messages.SERVER_CONNECTION_ERROR);
   }
 }

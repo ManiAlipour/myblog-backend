@@ -8,7 +8,7 @@ import {
   handleError,
   handleSuccess,
 } from "../utils/authfunctionalities";
-import messages from "../utils/constants/messages";
+import messages, { STATUS_CODES } from "../utils/constants/messages";
 
 export async function getAllPosts(req: Request, res: Response) {
   try {
@@ -67,10 +67,15 @@ export async function getAllPosts(req: Request, res: Response) {
       res,
       posts.map((post) => filterPost(post)),
       messages.POSTS_LIST_RETRIEVED,
-      200
+      STATUS_CODES.OK
     );
   } catch (error) {
-    handleError(res, error, 500, messages.SERVER_CONNECTION_ERROR);
+    handleError(
+      res,
+      error,
+      STATUS_CODES.INTERNAL_SERVER_ERROR,
+      messages.SERVER_CONNECTION_ERROR
+    );
   }
 }
 
@@ -79,17 +84,37 @@ export async function getOnePost(req: Request, res: Response) {
     const { id } = req.params;
     const objectIdPattern = /^[0-9a-fA-F]{24}$/;
     if (!id || !objectIdPattern.test(id)) {
-      return handleError(res, null, 400, messages.INVALID_POST_ID);
+      return handleError(
+        res,
+        null,
+        STATUS_CODES.BAD_REQUEST,
+        messages.INVALID_POST_ID
+      );
     }
     const post = await Post.findById(id)
       .populate("author", "username name")
       .populate("categories", "name");
     if (!post) {
-      return handleError(res, null, 404, messages.POST_NOT_FOUND);
+      return handleError(
+        res,
+        null,
+        STATUS_CODES.NOT_FOUND,
+        messages.POST_NOT_FOUND
+      );
     }
-    handleSuccess(res, filterPost(post), messages.POST_RETRIEVED, 200);
+    handleSuccess(
+      res,
+      filterPost(post),
+      messages.POST_RETRIEVED,
+      STATUS_CODES.OK
+    );
   } catch (error) {
-    handleError(res, error, 500, messages.SERVER_CONNECTION_ERROR);
+    handleError(
+      res,
+      error,
+      STATUS_CODES.INTERNAL_SERVER_ERROR,
+      messages.SERVER_CONNECTION_ERROR
+    );
   }
 }
 
@@ -103,7 +128,12 @@ export async function addNewPost(req: AuthRequest, res: Response) {
     const postWithSlug = await Post.findOne({ slug });
 
     if (postWithSlug)
-      return handleError(res, null, 409, messages.POST_WITH_SAME_SLUG_EXISTS);
+      return handleError(
+        res,
+        null,
+        STATUS_CODES.CONFLICT,
+        messages.POST_WITH_SAME_SLUG_EXISTS
+      );
 
     const post = new Post({
       title,
@@ -118,9 +148,19 @@ export async function addNewPost(req: AuthRequest, res: Response) {
 
     const savedPost = await post.save();
 
-    handleSuccess(res, filterPost(savedPost), messages.POST_ADDED, 201);
+    handleSuccess(
+      res,
+      filterPost(savedPost),
+      messages.POST_ADDED,
+      STATUS_CODES.CREATED
+    );
   } catch (error) {
-    handleError(res, error, 500, messages.SERVER_CONNECTION_ERROR);
+    handleError(
+      res,
+      error,
+      STATUS_CODES.INTERNAL_SERVER_ERROR,
+      messages.SERVER_CONNECTION_ERROR
+    );
   }
 }
 
@@ -130,19 +170,34 @@ export async function editPost(req: AuthRequest, res: Response) {
   const { id } = req.params;
   const objectIdPattern = /^[0-9a-fA-F]{24}$/;
   if (!id || !objectIdPattern.test(id)) {
-    return handleError(res, null, 400, messages.INVALID_POST_ID);
+    return handleError(
+      res,
+      null,
+      STATUS_CODES.BAD_REQUEST,
+      messages.INVALID_POST_ID
+    );
   }
 
   try {
     const post = await Post.findById(id);
     if (!post) {
-      return handleError(res, null, 404, messages.POST_NOT_FOUND);
+      return handleError(
+        res,
+        null,
+        STATUS_CODES.NOT_FOUND,
+        messages.POST_NOT_FOUND
+      );
     }
     if (
       post.author.toString() !== req.user._id.toString() &&
       req.user.role !== "admin"
     ) {
-      return handleError(res, null, 403, messages.NO_PERMISSION_TO_EDIT_POST);
+      return handleError(
+        res,
+        null,
+        STATUS_CODES.FORBIDDEN,
+        messages.NO_PERMISSION_TO_EDIT_POST
+      );
     }
 
     if (req.body.slug && req.body.slug !== post.slug) {
@@ -151,7 +206,12 @@ export async function editPost(req: AuthRequest, res: Response) {
         _id: { $ne: post._id },
       });
       if (duplicate)
-        return handleError(res, null, 409, messages.DUPLICATE_SLUG);
+        return handleError(
+          res,
+          null,
+          STATUS_CODES.CONFLICT,
+          messages.DUPLICATE_SLUG
+        );
     }
 
     const updatableFields = [
@@ -173,9 +233,14 @@ export async function editPost(req: AuthRequest, res: Response) {
 
     await post.populate("author", "username name");
     await post.populate("categories", "name");
-    handleSuccess(res, filterPost(post), messages.POST_EDITED, 200);
+    handleSuccess(res, filterPost(post), messages.POST_EDITED, STATUS_CODES.OK);
   } catch (error) {
-    handleError(res, error, 500, messages.SERVER_CONNECTION_ERROR);
+    handleError(
+      res,
+      error,
+      STATUS_CODES.INTERNAL_SERVER_ERROR,
+      messages.SERVER_CONNECTION_ERROR
+    );
   }
 }
 
@@ -184,15 +249,35 @@ export async function deletePost(req: Request, res: Response) {
     const { id } = req.params;
     const objectIdPattern = /^[0-9a-fA-F]{24}$/;
     if (!id || !objectIdPattern.test(id)) {
-      return handleError(res, null, 400, messages.INVALID_POST_ID);
+      return handleError(
+        res,
+        null,
+        STATUS_CODES.BAD_REQUEST,
+        messages.INVALID_POST_ID
+      );
     }
     const post = await Post.findById(id);
     if (!post) {
-      return handleError(res, null, 404, messages.POST_NOT_FOUND);
+      return handleError(
+        res,
+        null,
+        STATUS_CODES.NOT_FOUND,
+        messages.POST_NOT_FOUND
+      );
     }
     await Post.findByIdAndDelete(id);
-    handleSuccess(res, filterPost(post), messages.POST_DELETED, 200);
+    handleSuccess(
+      res,
+      filterPost(post),
+      messages.POST_DELETED,
+      STATUS_CODES.OK
+    );
   } catch (error) {
-    handleError(res, error, 500, messages.SERVER_CONNECTION_ERROR);
+    handleError(
+      res,
+      error,
+      STATUS_CODES.INTERNAL_SERVER_ERROR,
+      messages.SERVER_CONNECTION_ERROR
+    );
   }
 }
