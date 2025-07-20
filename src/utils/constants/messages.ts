@@ -31,6 +31,7 @@ const messages = {
   INVALID_USER_ID: "شناسه کاربر نامعتبر است.",
   USER_FOUND_SUCCESS: "کاربر با موفقیت پیدا شد.",
   USERS_LIST_RETRIEVED_SUCCESS: "لیست کاربران با موفقیت دریافت شد.",
+  USER_ALREADY_LOGEDOUT: "کاربر قبلا از حساب کاربری خود خارج شده است",
 
   // PostsController
   POSTS_LIST_RETRIEVED: "لیست پست‌ها با موفقیت دریافت شد.",
@@ -76,6 +77,12 @@ const messages = {
   TAG_NOT_FOUND: "برچسب پیدا نشد!",
   TAG_EDITED: "برچسب با موفقیت ویرایش شد.",
   TAG_DELETED: "برچسب با موفقیت حذف شد.",
+
+  // like
+  LIKE_DELETED: "لایک با موفقیت حذف شد.",
+  LIKE_ADDED: "لایک با موفقیت افزوده شد.",
+  LIKE_COUNT_RETRIEVED: "تعداد لایک‌ها با موفقیت دریافت شد.",
+  NO_LIKES: "کاربر پستی را لایک نکرده است.",
 };
 
 export default messages;

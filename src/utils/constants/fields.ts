@@ -43,6 +43,15 @@ export const allowedTagFields = [
   "updatedAt",
 ];
 
+// فیلدهای مجاز برای Like
+export const allowedLikeFields = [
+  "_id",
+  "postId",
+  "userId",
+  "createdAt",
+  "updatedAt",
+];
+
 export const SENSITIVE_USER_FIELDS = [
   "password",
   "verificationCode",

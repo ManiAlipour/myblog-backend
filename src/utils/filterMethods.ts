@@ -48,6 +48,16 @@ export function filterTag(tag: any) {
   return picked;
 }
 
+import { allowedLikeFields } from "./constants/fields";
+export function filterLike(like: any) {
+  if (!like) return null;
+  const obj = typeof like.toObject === "function" ? like.toObject() : like;
+  const picked = _.pick(obj, allowedLikeFields);
+  picked.id = picked._id?.toString();
+  delete picked._id;
+  return picked;
+}
+
 export const filterUser = (user: any) => {
   if (!user) return null;
 
