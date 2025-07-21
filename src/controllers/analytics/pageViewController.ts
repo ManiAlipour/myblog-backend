@@ -3,6 +3,9 @@ import { AuthRequest } from "../../middleware/authMiddleware";
 import Analytics from "../../models/Analytics";
 import { handleError, handleSuccess } from "../../utils/authfunctionalities";
 import messages, { STATUS_CODES } from "../../utils/constants/messages";
+import Post from "../../models/Post";
+import Comment from "../../models/Comment";
+import Like from "../../models/Like";
 
 export async function setPageView(req: Request | AuthRequest, res: Response) {
   try {
@@ -76,6 +79,45 @@ export async function getOnePageAnalyticsData(req: AuthRequest, res: Response) {
     return handleSuccess(
       res,
       { url, totalViews, pageViews },
+      messages.SUCCESS,
+      STATUS_CODES.OK
+    );
+  } catch (error) {
+    return handleError(
+      res,
+      error,
+      STATUS_CODES.INTERNAL_SERVER_ERROR,
+      messages.SERVER_CONNECTION_ERROR
+    );
+  }
+}
+
+export async function getPostAnalyticsData(req: AuthRequest, res: Response) {
+  try {
+    const postId = req.query.postId || req.body?.postId;
+    if (!postId) {
+      return handleError(
+        res,
+        null,
+        STATUS_CODES.BAD_REQUEST,
+        "شناسه پست ارسال نشده است."
+      );
+    }
+    const post = await Post.findById(postId);
+    if (!post) {
+      return handleError(res, null, STATUS_CODES.NOT_FOUND, "پست پیدا نشد.");
+    }
+    const commentCount = await Comment.countDocuments({ post: postId });
+    const likeCount = await Like.countDocuments({ postId });
+
+    const url = `/posts/${post.slug}`;
+    const totalViews = await Analytics.countDocuments({ url });
+    const pageViews = await Analytics.find({ url })
+      .sort({ createdAt: -1 })
+      .limit(20);
+    return handleSuccess(
+      res,
+      { postId, commentCount, likeCount, url, totalViews, pageViews },
       messages.SUCCESS,
       STATUS_CODES.OK
     );
