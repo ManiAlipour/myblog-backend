@@ -1,14 +1,16 @@
 import { Request, Response } from "express";
 import Post from "../../models/Post";
 import { filterPost } from "../../utils/filterMethods";
-import { AuthRequest } from "../../middleware/authMiddleware";
 import _ from "lodash";
 import {
   useValidationResult,
   handleError,
   handleSuccess,
+  objectIdPatternCheck,
 } from "../../utils/authfunctionalities";
 import messages, { STATUS_CODES } from "../../utils/constants/messages";
+import s3 from "../../utils/constants/cloude";
+import { AuthRequest } from "../../middleware/authMiddleware";
 
 export async function getAllPosts(req: Request, res: Response) {
   try {
@@ -121,8 +123,7 @@ export async function getOnePost(req: Request, res: Response) {
 export async function addNewPost(req: AuthRequest, res: Response) {
   if (useValidationResult({ req, res })) return;
 
-  const { title, slug, content, categories, tags, coverImage, published } =
-    req.body;
+  const { title, slug, content, categories, tags, published } = req.body;
 
   try {
     const postWithSlug = await Post.findOne({ slug });
@@ -135,14 +136,33 @@ export async function addNewPost(req: AuthRequest, res: Response) {
         messages.POST_WITH_SAME_SLUG_EXISTS
       );
 
+    const excerpt = String(content).slice(0, 150);
+
+    let coverImageUrl = null;
+    if (req.file) {
+      const filename = `${slug}-${Date.now()}-${req.file.originalname}`;
+
+      const uploadResult = await s3
+        .upload({
+          Bucket: process.env.CLOUD_BUCKET_NAME as string,
+          Key: `covers/${filename}`,
+          Body: req.file.buffer,
+          ACL: "public-read",
+          ContentType: req.file.mimetype,
+        })
+        .promise();
+
+      coverImageUrl = uploadResult.Location; // URL فایل آپلود شده
+    }
     const post = new Post({
       title,
       slug,
       content,
       author: req.user._id,
       categories,
+      excerpt,
       tags,
-      coverImage: coverImage || null,
+      coverImage: coverImageUrl,
       published: typeof published === "boolean" ? published : false,
     });
 
@@ -271,6 +291,66 @@ export async function deletePost(req: Request, res: Response) {
       filterPost(post),
       messages.POST_DELETED,
       STATUS_CODES.OK
+    );
+  } catch (error) {
+    handleError(
+      res,
+      error,
+      STATUS_CODES.INTERNAL_SERVER_ERROR,
+      messages.SERVER_CONNECTION_ERROR
+    );
+  }
+}
+
+export async function addPostView(req: Request, res: Response) {
+  const { id } = req.params;
+
+  try {
+    if (!id || !objectIdPatternCheck(id))
+      return handleError(
+        res,
+        null,
+        STATUS_CODES.BAD_REQUEST,
+        messages.INVALID_POST_ID
+      );
+
+    const post = await Post.findById(id);
+    post.view += 1;
+
+    const savedPost = await post.save();
+
+    return handleSuccess(res, filterPost(savedPost));
+  } catch (error) {
+    handleError(
+      res,
+      error,
+      STATUS_CODES.INTERNAL_SERVER_ERROR,
+      messages.SERVER_CONNECTION_ERROR
+    );
+  }
+}
+
+export async function setLike(req: Request, res: Response) {
+  const { id, action = "increase" } = req.params;
+
+  try {
+    if (!id || !objectIdPatternCheck(id))
+      return handleError(
+        res,
+        null,
+        STATUS_CODES.BAD_REQUEST,
+        messages.INVALID_POST_ID
+      );
+
+    const post = await Post.findById(id);
+
+    if (action === "decrease") post.likes -= 1;
+    else post.likes += 1;
+
+    return handleSuccess(
+      res,
+      post.likes,
+      action === "increase" ? messages.LIKE_ADDED : messages.LIKE_DELETED
     );
   } catch (error) {
     handleError(

@@ -8,7 +8,6 @@ import {
   useValidationResult,
 } from "../../utils/authfunctionalities";
 import messages, { STATUS_CODES } from "../../utils/constants/messages";
-import { AuthRequest } from "../../middleware/authMiddleware";
 
 export async function getAllTags(req: Request, res: Response) {
   try {
@@ -24,7 +23,7 @@ export async function getAllTags(req: Request, res: Response) {
   }
 }
 
-export async function addNewTag(req: AuthRequest, res: Response) {
+export async function addNewTag(req: Request, res: Response) {
   if (useValidationResult({ req, res })) return;
   let { name, slug } = req.body;
   name = name?.trim();
@@ -88,7 +87,7 @@ export async function getOneTag(req: Request, res: Response) {
   }
 }
 
-export async function editTag(req: AuthRequest, res: Response) {
+export async function editTag(req: Request, res: Response) {
   if (useValidationResult({ req, res })) return;
 
   const { id } = req.params;
@@ -129,7 +128,7 @@ export async function editTag(req: AuthRequest, res: Response) {
   }
 }
 
-export async function deleteTag(req: AuthRequest, res: Response) {
+export async function deleteTag(req: Request, res: Response) {
   const { id } = req.params;
 
   try {

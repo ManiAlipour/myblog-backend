@@ -1,15 +1,19 @@
 import { Request, Response } from "express";
-import { AuthRequest } from "../../middleware/authMiddleware";
 import Analytics from "../../models/Analytics";
-import { handleError, handleSuccess } from "../../utils/authfunctionalities";
+import {
+  handleError,
+  handleSuccess,
+  objectIdPatternCheck,
+} from "../../utils/authfunctionalities";
 import messages, { STATUS_CODES } from "../../utils/constants/messages";
 import Post from "../../models/Post";
 import Comment from "../../models/Comment";
-import Like from "../../models/Like";
+import { AuthRequest } from "../../middleware/authMiddleware";
 
-export async function setPageView(req: Request | AuthRequest, res: Response) {
+export async function setPageView(req: AuthRequest, res: Response) {
   try {
-    const user = (req as AuthRequest).user?._id;
+    let user = req?.user;
+
     const ipRaw =
       req.headers["x-forwarded-for"] || req.socket.remoteAddress || req.ip;
     const ip = Array.isArray(ipRaw)
@@ -42,7 +46,7 @@ export async function setPageView(req: Request | AuthRequest, res: Response) {
   }
 }
 
-export async function getALLPageViewsCount(req: AuthRequest, res: Response) {
+export async function getALLPageViewsCount(req: Request, res: Response) {
   try {
     const totalPageViews = await Analytics.countDocuments();
     return handleSuccess(
@@ -61,7 +65,7 @@ export async function getALLPageViewsCount(req: AuthRequest, res: Response) {
   }
 }
 
-export async function getOnePageAnalyticsData(req: AuthRequest, res: Response) {
+export async function getOnePageAnalyticsData(req: Request, res: Response) {
   try {
     const url = req.query.url || req.body?.url;
     if (!url) {
@@ -92,35 +96,24 @@ export async function getOnePageAnalyticsData(req: AuthRequest, res: Response) {
   }
 }
 
-export async function getPostAnalyticsData(req: AuthRequest, res: Response) {
+export async function getPostAnalyticsData(req: Request, res: Response) {
   try {
-    const postId = req.query.postId || req.body?.postId;
-    if (!postId) {
+    const { postId } = req.params;
+
+    if (!postId || !objectIdPatternCheck(postId))
       return handleError(
         res,
         null,
         STATUS_CODES.BAD_REQUEST,
-        "شناسه پست ارسال نشده است."
+        messages.INVALID_POST_ID
       );
-    }
-    const post = await Post.findById(postId);
-    if (!post) {
-      return handleError(res, null, STATUS_CODES.NOT_FOUND, "پست پیدا نشد.");
-    }
-    const commentCount = await Comment.countDocuments({ post: postId });
-    const likeCount = await Like.countDocuments({ postId });
 
-    const url = `/posts/${post.slug}`;
-    const totalViews = await Analytics.countDocuments({ url });
-    const pageViews = await Analytics.find({ url })
-      .sort({ createdAt: -1 })
-      .limit(20);
-    return handleSuccess(
-      res,
-      { postId, commentCount, likeCount, url, totalViews, pageViews },
-      messages.SUCCESS,
-      STATUS_CODES.OK
-    );
+    const { views: totalViews, likes } = await Post.findById(postId);
+    const commentsCount = (await Comment.countDocuments({ post: postId })) || 0;
+
+    const data = { totalViews, likeCount: likes, commentsCount };
+
+    return handleSuccess(res, data, messages.SUCCESS);
   } catch (error) {
     return handleError(
       res,

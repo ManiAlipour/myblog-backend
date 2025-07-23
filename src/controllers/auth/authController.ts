@@ -145,10 +145,10 @@ export async function login(req: Request, res: Response) {
 }
 
 export async function logout(req: AuthRequest, res: Response) {
-  const { id } = req.user;
+  const { _id } = req.user;
 
   try {
-    const user = await User.findById(id);
+    const user = await User.findById(_id);
 
     if (!user || !user.isActive)
       return handleError(

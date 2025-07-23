@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import Category from "../../models/Category";
-import { AuthRequest } from "../../middleware/authMiddleware";
 import {
   useValidationResult,
   handleError,
@@ -26,7 +25,7 @@ export async function getAllCategories(req: Request, res: Response) {
   }
 }
 
-export async function addNewCategory(req: AuthRequest, res: Response) {
+export async function addNewCategory(req: Request, res: Response) {
   if (useValidationResult({ req, res })) return;
 
   let { name, slug, description } = req.body;
@@ -159,7 +158,7 @@ export async function getPostWithCategory(req: Request, res: Response) {
   }
 }
 
-export async function editCategory(req: AuthRequest, res: Response) {
+export async function editCategory(req: Request, res: Response) {
   if (useValidationResult({ req, res })) return;
 
   const { id } = req.params;
@@ -199,7 +198,7 @@ export async function editCategory(req: AuthRequest, res: Response) {
   }
 }
 
-export async function deleteCategory(req: AuthRequest, res: Response) {
+export async function deleteCategory(req: Request, res: Response) {
   const { id } = req.params;
 
   try {

@@ -6,6 +6,7 @@ import {
   addPostValidator,
   editPostValidator,
 } from "../../validators/postValidator";
+import upload from "../../utils/multer";
 
 const router = Router();
 
@@ -15,7 +16,12 @@ router.get("/:id", postController.getOnePost);
 router.use(authMiddleware);
 router.use(adminMiddleware);
 
-router.post("/", addPostValidator, postController.addNewPost);
+router.post(
+  "/",
+  upload.single("coverImage"),
+  addPostValidator,
+  postController.addNewPost
+);
 router.put("/:id", editPostValidator, postController.editPost);
 router.delete("/:id", postController.deletePost);
 

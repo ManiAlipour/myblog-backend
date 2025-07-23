@@ -1,17 +1,13 @@
 import { Request, Response } from "express";
 import User from "../../models/User";
 import {
-  generateToken,
-  hashPassword,
-  isMatchPassword,
-  sendVerificationCode,
   useValidationResult,
   handleError,
   handleSuccess,
 } from "../../utils/authfunctionalities";
 import { filterUser } from "../../utils/filterMethods";
-import { AuthRequest } from "../../middleware/authMiddleware";
 import messages from "../../utils/constants/messages";
+import { AuthRequest } from "../../middleware/authMiddleware";
 
 export async function getProfile(req: AuthRequest, res: Response) {
   const user = req.user;
@@ -57,7 +53,7 @@ export async function editProfile(req: AuthRequest, res: Response) {
     if (bio !== undefined) updates.bio = bio;
     if (avatar !== undefined) updates.avatar = avatar;
 
-    const updatedUser = await User.findByIdAndUpdate(req.user._id, updates, {
+    const updatedUser = await User.findByIdAndUpdate(req.user.id, updates, {
       new: true,
     });
 
@@ -79,7 +75,7 @@ export async function editProfile(req: AuthRequest, res: Response) {
   }
 }
 
-export async function getAllUsers(req: AuthRequest, res: Response) {
+export async function getAllUsers(req: Request, res: Response) {
   try {
     const { search, id, sort, role, status } = req.query;
     // Search by ID (exact) with ObjectId validation
