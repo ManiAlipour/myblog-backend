@@ -9,7 +9,7 @@ import {
   objectIdPatternCheck,
 } from "../../utils/authfunctionalities";
 import messages, { STATUS_CODES } from "../../utils/constants/messages";
-import s3 from "../../utils/constants/cloude";
+import s3, { uploadFile } from "../../utils/constants/cloude";
 import { AuthRequest } from "../../middleware/authMiddleware";
 
 export async function getAllPosts(req: Request, res: Response) {
@@ -142,17 +142,7 @@ export async function addNewPost(req: AuthRequest, res: Response) {
     if (req.file) {
       const filename = `${slug}-${Date.now()}-${req.file.originalname}`;
 
-      const uploadResult = await s3
-        .upload({
-          Bucket: process.env.CLOUD_BUCKET_NAME as string,
-          Key: `covers/${filename}`,
-          Body: req.file.buffer,
-          ACL: "public-read",
-          ContentType: req.file.mimetype,
-        })
-        .promise();
-
-      coverImageUrl = uploadResult.Location; // URL فایل آپلود شده
+      coverImageUrl = await uploadFile(`covers/${filename}`, req.file);
     }
     const post = new Post({
       title,

@@ -18,12 +18,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.850.0",
     "@types/bcrypt": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/lodash": "^4.17.20",
     "@types/multer": "^2.0.0",
     "@types/nodemailer": "^6.4.17",
-    "aws-sdk": "^2.1692.0",
     "bcrypt": "^6.0.0",
     "client-s3": "github:aws-sdk/client-s3",
     "dotenv": "^16.3.1",

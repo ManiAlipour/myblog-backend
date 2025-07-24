@@ -7,6 +7,7 @@ import {
   editPostValidator,
 } from "../../validators/postValidator";
 import upload from "../../utils/multer";
+import validateImageFile from "../../middleware/validateImageFile";
 
 const router = Router();
 
@@ -19,6 +20,7 @@ router.use(adminMiddleware);
 router.post(
   "/",
   upload.single("coverImage"),
+  validateImageFile,
   addPostValidator,
   postController.addNewPost
 );

@@ -12,11 +12,6 @@ export const addPostValidator = [
     .isSlug()
     .withMessage("اسلاگ باید معتبر باشد (فقط حروف کوچک، اعداد و خط تیره)."),
   body("content").notEmpty().withMessage("محتوای پست الزامی است."),
-  body("author")
-    .notEmpty()
-    .withMessage("شناسه نویسنده الزامی است.")
-    .isMongoId()
-    .withMessage("شناسه نویسنده معتبر نیست."),
   body("categories")
     .optional()
     .isArray()
@@ -27,10 +22,6 @@ export const addPostValidator = [
     .withMessage("شناسه دسته‌بندی معتبر نیست."),
   body("tags").optional().isArray().withMessage("تگ‌ها باید آرایه باشند."),
   body("tags.*").optional().isString().withMessage("هر تگ باید یک رشته باشد."),
-  body("coverImage")
-    .optional()
-    .isURL()
-    .withMessage("آدرس تصویر کاور باید معتبر باشد."),
   body("published")
     .optional()
     .isBoolean()
