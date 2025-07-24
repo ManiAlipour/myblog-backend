@@ -82,6 +82,7 @@ const messages = {
   LIKE_DELETED: "لایک با موفقیت حذف شد.",
   LIKE_ADDED: "لایک با موفقیت افزوده شد.",
   LIKE_COUNT_RETRIEVED: "تعداد لایک‌ها با موفقیت دریافت شد.",
+  INVALID_LIKE_ACTION: "اکشن نامعتبر است.",
   NO_LIKES: "کاربر پستی را لایک نکرده است.",
 };
 

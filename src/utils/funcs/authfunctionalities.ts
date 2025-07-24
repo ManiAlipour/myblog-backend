@@ -1,12 +1,11 @@
 import * as bcrypt from "bcrypt";
-import { sendEmail } from "./sendEmail";
+import { sendEmail } from "../services/sendEmail";
 import _ from "lodash";
 import jwt from "jsonwebtoken";
-import Comment from "../models/Comment";
+import Comment from "../../models/Comment";
 import { validationResult } from "express-validator";
 import { Request, Response } from "express";
-import { AuthRequest } from "../middleware/authMiddleware";
-import messages from "./constants/messages";
+import { AuthRequest } from "../../middleware/authMiddleware";
 
 export const hashPassword = async (plainPassword: string) => {
   const salt = await bcrypt.genSalt(10);

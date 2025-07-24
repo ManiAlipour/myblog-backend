@@ -7,10 +7,11 @@ import {
   useValidationResult,
   handleError,
   handleSuccess,
-} from "../../utils/authfunctionalities";
-import { filterComment } from "../../utils/filterMethods";
+} from "../../utils/funcs/authfunctionalities";
+import { filterComment } from "../../utils/funcs/filterMethods";
 import messages, { STATUS_CODES } from "../../utils/constants/messages";
 import { AuthRequest } from "../../middleware/authMiddleware";
+import { MAX_COMMENT_DEPTH } from "../../utils/constants";
 
 export async function getPostComments(req: Request, res: Response) {
   try {
@@ -52,7 +53,6 @@ export async function addCommentToPost(req: AuthRequest, res: Response) {
 
   try {
     const post = await Post.findById(id);
-
     if (!post)
       return handleError(
         res,
@@ -61,6 +61,7 @@ export async function addCommentToPost(req: AuthRequest, res: Response) {
         messages.POST_NOT_FOUND
       );
 
+    let depth = 1;
     if (parent) {
       const parentComment = await Comment.findById(parent);
       if (!parentComment || parentComment.post.toString() !== id) {
@@ -71,6 +72,16 @@ export async function addCommentToPost(req: AuthRequest, res: Response) {
           messages.PARENT_COMMENT_NOT_FOUND_OR_NOT_RELATED
         );
       }
+
+      depth = parentComment.depth + 1;
+      if (depth > MAX_COMMENT_DEPTH) {
+        return handleError(
+          res,
+          null,
+          STATUS_CODES.BAD_REQUEST,
+          `امکان پاسخ‌دهی بیش از ${MAX_COMMENT_DEPTH} سطح وجود ندارد.`
+        );
+      }
     }
 
     const comment = new Comment({
@@ -78,10 +89,10 @@ export async function addCommentToPost(req: AuthRequest, res: Response) {
       author: req.user._id,
       content,
       ...(parent ? { parent } : {}),
+      depth,
     });
 
     const savedComment = await comment.save();
-
     await savedComment.populate("author", "username name");
 
     handleSuccess(

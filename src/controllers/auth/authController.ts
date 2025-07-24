@@ -7,9 +7,9 @@ import {
   isMatchPassword,
   sendVerificationCode,
   useValidationResult,
-} from "../../utils/authfunctionalities";
+} from "../../utils/funcs/authfunctionalities";
 import User from "../../models/User";
-import { filterUser } from "../../utils/filterMethods";
+import { filterUser } from "../../utils/funcs/filterMethods";
 import messages, { STATUS_CODES } from "../../utils/constants/messages";
 import { AuthRequest } from "../../middleware/authMiddleware";
 

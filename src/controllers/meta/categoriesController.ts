@@ -5,11 +5,10 @@ import {
   handleError,
   handleSuccess,
   objectIdPatternCheck,
-} from "../../utils/authfunctionalities";
+} from "../../utils/funcs/authfunctionalities";
 import messages, { STATUS_CODES } from "../../utils/constants/messages";
-import { filterCategory } from "../../utils/filterMethods";
+import { filterCategory, filterPost } from "../../utils/funcs/filterMethods";
 import Post from "../../models/Post";
-import { filterPost } from "../../utils/filterMethods";
 
 export async function getAllCategories(req: Request, res: Response) {
   try {

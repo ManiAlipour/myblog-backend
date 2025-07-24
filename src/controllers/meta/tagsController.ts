@@ -1,12 +1,12 @@
 import { Request, Response } from "express";
 import Tag from "../../models/Tag";
-import { filterTag } from "../../utils/filterMethods";
+import { filterTag } from "../../utils/funcs/filterMethods";
 import {
   handleError,
   handleSuccess,
   objectIdPatternCheck,
   useValidationResult,
-} from "../../utils/authfunctionalities";
+} from "../../utils/funcs/authfunctionalities";
 import messages, { STATUS_CODES } from "../../utils/constants/messages";
 
 export async function getAllTags(req: Request, res: Response) {

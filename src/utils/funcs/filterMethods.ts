@@ -5,8 +5,8 @@ import {
   SENSITIVE_USER_FIELDS,
   allowedCategoryFields,
   allowedTagFields,
-} from "./constants/fields";
-import { IPost } from "../models/Post";
+} from "../constants/fields";
+import { IPost } from "../../models/Post";
 
 export function filterComment(comment: any) {
   if (!comment) return null;
@@ -48,7 +48,7 @@ export function filterTag(tag: any) {
   return picked;
 }
 
-import { allowedLikeFields } from "./constants/fields";
+import { allowedLikeFields } from "../constants/fields";
 export function filterLike(like: any) {
   if (!like) return null;
   const obj = typeof like.toObject === "function" ? like.toObject() : like;

@@ -4,8 +4,8 @@ import {
   useValidationResult,
   handleError,
   handleSuccess,
-} from "../../utils/authfunctionalities";
-import { filterUser } from "../../utils/filterMethods";
+} from "../../utils/funcs/authfunctionalities";
+import { filterUser } from "../../utils/funcs/filterMethods";
 import messages from "../../utils/constants/messages";
 import { AuthRequest } from "../../middleware/authMiddleware";
 

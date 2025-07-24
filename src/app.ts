@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
 import indexRouter from "./routes";
-import connectToDB from "./utils/dbConnect";
+import connectToDB from "./utils/services/dbConnect";
 
 const app = express();
 const PORT = process.env.PORT || 3000;

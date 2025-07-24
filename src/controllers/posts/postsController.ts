@@ -1,16 +1,17 @@
 import { Request, Response } from "express";
 import Post from "../../models/Post";
-import { filterPost } from "../../utils/filterMethods";
+import { filterPost } from "../../utils/funcs/filterMethods";
 import _ from "lodash";
 import {
   useValidationResult,
   handleError,
   handleSuccess,
   objectIdPatternCheck,
-} from "../../utils/authfunctionalities";
+} from "../../utils/funcs/authfunctionalities";
 import messages, { STATUS_CODES } from "../../utils/constants/messages";
-import s3, { uploadFile } from "../../utils/constants/cloude";
+import s3, { uploadFile } from "../../utils/services/cloude";
 import { AuthRequest } from "../../middleware/authMiddleware";
+import sanitize from "sanitize-html";
 
 export async function getAllPosts(req: Request, res: Response) {
   try {
@@ -123,7 +124,7 @@ export async function getOnePost(req: Request, res: Response) {
 export async function addNewPost(req: AuthRequest, res: Response) {
   if (useValidationResult({ req, res })) return;
 
-  const { title, slug, content, categories, tags, published } = req.body;
+  let { title, slug, content, categories, tags, published } = req.body;
 
   try {
     const postWithSlug = await Post.findOne({ slug });
@@ -136,7 +137,9 @@ export async function addNewPost(req: AuthRequest, res: Response) {
         messages.POST_WITH_SAME_SLUG_EXISTS
       );
 
-    const excerpt = String(content).slice(0, 150);
+    const excerpt = sanitize(String(content).slice(0, 150));
+    content = sanitize(content);
+    title = sanitize(title);
 
     let coverImageUrl = null;
     if (req.file) {
@@ -234,6 +237,10 @@ export async function editPost(req: AuthRequest, res: Response) {
       "published",
     ];
     const data = _.pick(req.body, updatableFields);
+
+    if (typeof data.content === "string") data.content = sanitize(data.content);
+    if (typeof data.title === "string") data.title = sanitize(data.title);
+
     Object.assign(post, data);
 
     if (req.body.published === true && !post.publishedAt) {
@@ -334,12 +341,30 @@ export async function setLike(req: Request, res: Response) {
 
     const post = await Post.findById(id);
 
+    if (!post)
+      return handleError(
+        res,
+        null,
+        STATUS_CODES.NOT_FOUND,
+        messages.POST_NOT_FOUND
+      );
+
+    if (action !== "increase" && action !== "decrease")
+      return handleError(
+        res,
+        null,
+        STATUS_CODES.BAD_REQUEST,
+        messages.INVALID_LIKE_ACTION
+      );
+
     if (action === "decrease") post.likes -= 1;
     else post.likes += 1;
 
+    const savedPost = await post.save();
+
     return handleSuccess(
       res,
-      post.likes,
+      { likes: savedPost.likes },
       action === "increase" ? messages.LIKE_ADDED : messages.LIKE_DELETED
     );
   } catch (error) {

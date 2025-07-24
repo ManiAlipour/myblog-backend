@@ -7,6 +7,7 @@ export interface IComment extends Document {
   parent?: mongoose.Types.ObjectId; // For replies
   createdAt: Date;
   updatedAt: Date;
+  depth: number;
   isApproved: boolean;
 }
 
@@ -17,6 +18,7 @@ const CommentSchema = new Schema<IComment>(
     content: { type: String, required: true },
     parent: { type: Schema.Types.ObjectId, ref: "Comment", default: null },
     isApproved: { type: Boolean, default: false },
+    depth: { type: Number, default: 1 },
   },
   { timestamps: true }
 );
