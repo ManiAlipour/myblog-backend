@@ -84,6 +84,12 @@ const messages = {
   LIKE_COUNT_RETRIEVED: "تعداد لایک‌ها با موفقیت دریافت شد.",
   INVALID_LIKE_ACTION: "اکشن نامعتبر است.",
   NO_LIKES: "کاربر پستی را لایک نکرده است.",
+
+  MESSAGE_ADDED: "پیام با موفقیت ارسال شد.",
+  PERMISSION_NOT_VALID: "ورودی اجازه باید مقداری بولین باشد.",
+  SHOW_NOT_VALID: "ورودی نمایش باید مقداری بولین باشد.",
+  INVALID_MESSAGE_ID: "ایدی پیام ارسال شده نامعتبر است",
+  MESSAGE_NOT_FOUND: "پیام پیدا نشد.",
 };
 
 export default messages;

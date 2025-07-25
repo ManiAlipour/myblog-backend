@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Post from "../../models/Post";
+import Post, { IPost } from "../../models/Post";
 import { filterPost } from "../../utils/funcs/filterMethods";
 import _ from "lodash";
 import {
@@ -366,6 +366,30 @@ export async function setLike(req: Request, res: Response) {
       res,
       { likes: savedPost.likes },
       action === "increase" ? messages.LIKE_ADDED : messages.LIKE_DELETED
+    );
+  } catch (error) {
+    handleError(
+      res,
+      error,
+      STATUS_CODES.INTERNAL_SERVER_ERROR,
+      messages.SERVER_CONNECTION_ERROR
+    );
+  }
+}
+
+export async function getPopularPosts(req: Request, res: Response) {
+  try {
+    let posts = await Post.find({ published: true })
+      .sort({ views: -1 })
+      .limit(10)
+      .lean();
+
+    let filtredPosts = posts.map((p: any) => filterPost(p));
+
+    return handleSuccess(
+      res,
+      { posts: filtredPosts },
+      messages.POSTS_LIST_RETRIEVED
     );
   } catch (error) {
     handleError(

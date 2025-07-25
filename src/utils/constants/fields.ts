@@ -43,11 +43,12 @@ export const allowedTagFields = [
   "updatedAt",
 ];
 
-// فیلدهای مجاز برای Like
-export const allowedLikeFields = [
+export const allowedMessageFields = [
   "_id",
-  "postId",
   "userId",
+  "title",
+  "content",
+  "published",
   "createdAt",
   "updatedAt",
 ];

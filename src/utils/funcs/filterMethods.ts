@@ -5,6 +5,7 @@ import {
   SENSITIVE_USER_FIELDS,
   allowedCategoryFields,
   allowedTagFields,
+  allowedMessageFields,
 } from "../constants/fields";
 import { IPost } from "../../models/Post";
 
@@ -48,16 +49,6 @@ export function filterTag(tag: any) {
   return picked;
 }
 
-import { allowedLikeFields } from "../constants/fields";
-export function filterLike(like: any) {
-  if (!like) return null;
-  const obj = typeof like.toObject === "function" ? like.toObject() : like;
-  const picked = _.pick(obj, allowedLikeFields);
-  picked.id = picked._id?.toString();
-  delete picked._id;
-  return picked;
-}
-
 export const filterUser = (user: any) => {
   if (!user) return null;
 
@@ -68,4 +59,16 @@ export const filterUser = (user: any) => {
   delete filteredUser._id;
 
   return filteredUser;
+};
+
+export const filterMessage = (msg: any) => {
+  if (!msg) return null;
+
+  const obj = typeof msg.toObject === "function" ? msg.toObject() : msg;
+
+  let filterMessage = _.omit(obj, allowedMessageFields) as Record<string, any>;
+  filterMessage.id = filterMessage._id;
+  delete filterMessage._id;
+
+  return filterMessage;
 };
