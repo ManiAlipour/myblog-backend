@@ -95,4 +95,4 @@ curl http://localhost:3000/api/
 
 ## نویسنده
 
-[نام شما اینجا]
+Mani Alipour
