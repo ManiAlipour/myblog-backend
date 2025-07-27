@@ -7,6 +7,7 @@ import commentsRouter from "./posts/comments";
 import tagsRouter from "./meta/tags";
 import authRouter from "./auth/auth";
 import analyticsRouter from "./analytics";
+import adminRouter from "./auth/admin";
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use("/comments", commentsRouter);
 router.use("/categories", categoriesRouter);
 router.use("/tags", tagsRouter);
 router.use("/analytics", analyticsRouter);
+router.use("/admin", adminRouter);
 
 export default router;

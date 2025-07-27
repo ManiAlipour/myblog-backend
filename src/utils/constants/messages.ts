@@ -66,8 +66,6 @@ const messages = {
   CATEGORY_ADDED: "دسته‌بندی با موفقیت افزوده شد.",
   CATEGORY_EXISTS: "دسته‌بندی با این اسلاگ قبلاً ثبت شده است.",
   CATEGORY_NOT_FOUND: "دسته‌بندی پیدا نشد!",
-  CATEGORY_EDITED: "دسته‌بندی با موفقیت ویرایش شد.",
-  CATEGORY_DELETED: "دسته‌بندی با موفقیت حذف شد.",
 
   // Tag (برچسب)
   TAG_LIST_RETRIEVED: "لیست برچسب‌ها با موفقیت دریافت شد.",
@@ -75,8 +73,6 @@ const messages = {
   TAG_ADDED: "برچسب با موفقیت افزوده شد.",
   TAG_EXISTS: "برچسب با این اسلاگ قبلاً ثبت شده است.",
   TAG_NOT_FOUND: "برچسب پیدا نشد!",
-  TAG_EDITED: "برچسب با موفقیت ویرایش شد.",
-  TAG_DELETED: "برچسب با موفقیت حذف شد.",
 
   // like
   LIKE_DELETED: "لایک با موفقیت حذف شد.",
@@ -90,6 +86,8 @@ const messages = {
   SHOW_NOT_VALID: "ورودی نمایش باید مقداری بولین باشد.",
   INVALID_MESSAGE_ID: "ایدی پیام ارسال شده نامعتبر است",
   MESSAGE_NOT_FOUND: "پیام پیدا نشد.",
+
+  DASHBOARD_INFO_RETRIEVED: "اطلاعات داشبورد با موفقیت دریافت شد.",
 };
 
 export default messages;
