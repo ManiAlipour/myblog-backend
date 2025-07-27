@@ -1,7 +1,14 @@
 import { Request, Response } from "express";
-import { handleError, handleSuccess } from "../../utils/funcs/authfunctionalities";
+import {
+  handleError,
+  handleSuccess,
+} from "../../utils/funcs/authfunctionalities";
 import messages from "../../utils/constants/messages";
-import { filterUser, filterPost, filterComment } from "../../utils/funcs/filterMethods";
+import {
+  filterUser,
+  filterPost,
+  filterComment,
+} from "../../utils/funcs/filterMethods";
 import User from "../../models/User";
 import Post from "../../models/Post";
 import Comment from "../../models/Comment";
@@ -193,18 +200,31 @@ export async function getAllCommentsAdmin(req: Request, res: Response) {
 
 export async function getDashboardInfo(req: Request, res: Response) {
   try {
-    const [userCount, postCount, commentCount] = await Promise.all([
-      User.countDocuments(),
+    const [
+      userCount,
+      postCount,
+      commentCount,
+      publishedPostCount,
+      pendingCommentCount,
+      activeUserCount,
+    ] = await Promise.all([
+      User.countDocuments({ isActive: true }),
       Post.countDocuments(),
       Comment.countDocuments(),
+      Post.countDocuments({ published: true }),
+      Comment.countDocuments({ isApproved: false }),
+      User.countDocuments({ isActive: true }),
     ]);
 
     return handleSuccess(
       res,
-    {
+      {
         users: userCount,
         posts: postCount,
         comments: commentCount,
+        publishedPosts: publishedPostCount,
+        pendingComments: pendingCommentCount,
+        activeUsers: activeUserCount,
       },
       messages.DASHBOARD_INFO_RETRIEVED,
       200

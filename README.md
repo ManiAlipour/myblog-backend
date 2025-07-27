@@ -1,4 +1,6 @@
-# Blog Backend (TypeScript)
+ 
+ 
+ # Blog Backend (TypeScript)
 
 پروژه پایه Node.js برای بک‌اند وبلاگ با استفاده از Express.js و TypeScript
 
@@ -72,6 +74,11 @@
 - `/api/categories` : مدیریت دسته‌بندی‌ها
 - `/api/tags` : مدیریت برچسب‌ها
 - `/api/analytics` : داده‌های آنالیز بازدید
+- `/api/admin/users` : مدیریت کاربران (ادمین)
+- `/api/admin/posts` : لیست پست‌ها با جستجو (ادمین)
+- `/api/admin/comments` : لیست همه کامنت‌ها (ادمین)
+- `/api/admin/dashboard` : دریافت اطلاعات آماری (ادمین)
+
 
 ## نمونه استفاده
 
