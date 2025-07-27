@@ -15,7 +15,7 @@
     "blog",
     "backend"
   ],
-  "author": "",
+  "author": "Mani Alipour",
   "license": "ISC",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.850.0",

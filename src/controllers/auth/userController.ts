@@ -4,10 +4,12 @@ import {
   useValidationResult,
   handleError,
   handleSuccess,
+  objectIdPatternCheck,
 } from "../../utils/funcs/authfunctionalities";
 import { filterUser } from "../../utils/funcs/filterMethods";
-import messages from "../../utils/constants/messages";
+import messages, { STATUS_CODES } from "../../utils/constants/messages";
 import { AuthRequest } from "../../middleware/authMiddleware";
+import { uploadFile } from "../../utils/services/cloude";
 
 export async function getProfile(req: AuthRequest, res: Response) {
   const user = req.user;
@@ -75,75 +77,46 @@ export async function editProfile(req: AuthRequest, res: Response) {
   }
 }
 
-export async function getAllUsers(req: Request, res: Response) {
+export async function setUserAvatar(req: AuthRequest, res: Response) {
+  const file = req.file;
+  const { _id: id } = req.user;
+
   try {
-    const { search, id, sort, role, status } = req.query;
-    // Search by ID (exact) with ObjectId validation
-    if (id) {
-      const objectIdPattern = /^[0-9a-fA-F]{24}$/;
-      if (typeof id !== "string" || !objectIdPattern.test(id)) {
-        return handleError(res, null, 400, messages.INVALID_USER_ID);
-      }
-      const user = await User.findById(id as string);
-      if (!user) {
-        return handleError(res, null, 404, messages.USER_NOT_FOUND);
-      }
-      return handleSuccess(
+    if (!file)
+      return handleError(
         res,
-        [filterUser(user)],
-        messages.USER_FOUND_SUCCESS,
-        200
+        null,
+        STATUS_CODES.BAD_REQUEST,
+        "آواتار دریافت نشد."
       );
-    }
 
-    // Search by text (username, name, email)
-    let query: any = {};
-    if (search) {
-      const regex = new RegExp(search as string, "i");
-      query.$or = [{ username: regex }, { name: regex }, { email: regex }];
-    }
-    // Filter by role
-    if (role) {
-      query.role = role;
-    }
-    // Filter by status (isActive)
-    if (status !== undefined) {
-      if (status === "active") query.isActive = true;
-      else if (status === "inactive") query.isActive = false;
-    }
+    if (!id || !objectIdPatternCheck(id))
+      return handleError(
+        res,
+        null,
+        STATUS_CODES.BAD_REQUEST,
+        messages.INVALID_USER_ID
+      );
 
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-    const skip = (page - 1) * limit;
+    const user = await User.findById(id);
 
-    // Sorting
-    let sortOption: any = { createdAt: -1 }; // Default: newest
-    if (sort === "oldest") sortOption = { createdAt: 1 };
-    else if (sort === "username") sortOption = { username: 1 };
-    else if (sort === "email") sortOption = { email: 1 };
-    else if (sort === "name") sortOption = { name: 1 };
-    else if (sort === "role") sortOption = { role: 1 };
+    if (!user)
+      return handleError(
+        res,
+        null,
+        STATUS_CODES.NOT_FOUND,
+        messages.USER_NOT_FOUND
+      );
+    const safeUsername = user.username.replace(/[^\w\d_-]/g, "");
+    const filename = `${safeUsername}-${Date.now()}-${file?.originalname}`;
 
-    const [users, total] = await Promise.all([
-      User.find(query).sort(sortOption).skip(skip).limit(limit),
-      User.countDocuments(query),
-    ]);
+    const avatar = await uploadFile(`profiles/${filename}`, file!);
 
-    const filteredUsers = users.map((user) => filterUser(user));
-    return handleSuccess(
-      res,
-      {
-        data: filteredUsers,
-        pagination: {
-          total,
-          page,
-          limit,
-          totalPages: Math.ceil(total / limit),
-        },
-      },
-      messages.USERS_LIST_RETRIEVED_SUCCESS,
-      200
-    );
+    user.avatar = avatar;
+
+    const savedUser = await user.save();
+
+    return handleSuccess(res, { user: filterUser(savedUser) });
   } catch (error) {
     handleError(res, error, 500, messages.SERVER_ERROR);
   }
