@@ -3,7 +3,7 @@ import {
   authMiddleware,
   optionalAuthMiddleware,
 } from "../../middleware/authMiddleware";
-import * as pageViewController from "../../controllers/analytics/pageviewController";
+import * as pageViewController from "../../controllers/analytics/pageViewController";
 import { adminMiddleware } from "../../middleware/adminMiddleware";
 
 const router = Router();

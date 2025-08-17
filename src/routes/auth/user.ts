@@ -3,7 +3,6 @@ import * as controller from "../../controllers/auth/userController";
 import * as validators from "../../validators/userValidator";
 import { authMiddleware } from "../../middleware/authMiddleware";
 import { canAccessOwnProfile } from "../../middleware/canAccessOwnProfile";
-import { adminMiddleware } from "../../middleware/adminMiddleware";
 import upload from "../../utils/multer";
 import validateImageFile from "../../middleware/validateImageFile";
 
@@ -19,8 +18,5 @@ router.put(
   validateImageFile,
   controller.setUserAvatar
 );
-
-router.use(adminMiddleware);
-router.get("/all-users", controller.getAllUsers);
 
 export default router;

@@ -66,12 +66,16 @@ const messages = {
   CATEGORY_ADDED: "دسته‌بندی با موفقیت افزوده شد.",
   CATEGORY_EXISTS: "دسته‌بندی با این اسلاگ قبلاً ثبت شده است.",
   CATEGORY_NOT_FOUND: "دسته‌بندی پیدا نشد!",
+  CATEGORY_EDITED: "دسته بندی با موفقیت ویرایش شد.",
+  CATEGORY_DELETED: "دسته بندی با موفقیت جذف شد.",
 
   // Tag (برچسب)
   TAG_LIST_RETRIEVED: "لیست برچسب‌ها با موفقیت دریافت شد.",
   INVALID_TAG_ID: "شناسه ی برچسب نامعتبر.",
   TAG_ADDED: "برچسب با موفقیت افزوده شد.",
   TAG_EXISTS: "برچسب با این اسلاگ قبلاً ثبت شده است.",
+  TAG_EDITED: "برچسب با موفقیت حذف شد.",
+  TAG_DELETED: "برچسب با موفقیت حذف شد.",
   TAG_NOT_FOUND: "برچسب پیدا نشد!",
 
   // like
