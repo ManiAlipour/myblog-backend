@@ -31,26 +31,10 @@ export async function getProfile(req: AuthRequest, res: Response) {
 export async function editProfile(req: AuthRequest, res: Response) {
   if (useValidationResult({ req, res })) return;
 
-  const { username, name, bio, avatar } = req.body;
+  const { name, bio, avatar } = req.body;
 
   try {
-    if (username && username !== req.user.username) {
-      const userWithSameUsername = await User.findOne({ username });
-      if (
-        userWithSameUsername &&
-        userWithSameUsername._id.toString() !== req.user._id.toString()
-      ) {
-        return handleError(
-          res,
-          null,
-          409,
-          messages.USERNAME_ALREADY_USED_BY_ANOTHER_USER
-        );
-      }
-    }
-
     const updates: any = {};
-    if (username !== undefined) updates.username = username;
     if (name !== undefined) updates.name = name;
     if (bio !== undefined) updates.bio = bio;
     if (avatar !== undefined) updates.avatar = avatar;
@@ -72,7 +56,6 @@ export async function editProfile(req: AuthRequest, res: Response) {
       200
     );
   } catch (error) {
-    console.error(error);
     handleError(res, error, 500, messages.SERVER_ERROR);
   }
 }
@@ -107,13 +90,11 @@ export async function setUserAvatar(req: AuthRequest, res: Response) {
         STATUS_CODES.NOT_FOUND,
         messages.USER_NOT_FOUND
       );
-    const safeUsername = user.username.replace(/[^\w\d_-]/g, "");
-    const filename = `${safeUsername}-${Date.now()}-${file?.originalname}`;
 
+    const filename = `user-${Date.now()}-${file?.originalname}`;
     const avatar = await uploadFile(`profiles/${filename}`, file!);
 
     user.avatar = avatar;
-
     const savedUser = await user.save();
 
     return handleSuccess(res, { user: filterUser(savedUser) });

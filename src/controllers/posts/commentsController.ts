@@ -17,6 +17,7 @@ export async function getPostComments(req: Request, res: Response) {
   try {
     const { id } = req.params;
     const objectIdPattern = /^[0-9a-fA-F]{24}$/;
+
     if (!id || !objectIdPattern.test(id)) {
       return handleError(
         res,
@@ -27,11 +28,12 @@ export async function getPostComments(req: Request, res: Response) {
     }
 
     const comments = await Comment.find({ post: id, isApproved: true })
-      .populate("author", "username name avatar")
+      .populate("author", "name avatar")
       .sort({ createdAt: -1 });
+
     handleSuccess(
       res,
-      comments.map((comment: any) => filterComment(comment)),
+      comments.map(filterComment),
       messages.COMMENTS_LIST_RECEIVED,
       STATUS_CODES.OK
     );
@@ -93,7 +95,7 @@ export async function addCommentToPost(req: AuthRequest, res: Response) {
     });
 
     const savedComment = await comment.save();
-    await savedComment.populate("author", "username name");
+    await savedComment.populate("author", "avatar name");
 
     handleSuccess(
       res,

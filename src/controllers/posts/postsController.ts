@@ -61,7 +61,7 @@ export async function getAllPosts(req: Request, res: Response) {
         .sort(sortOption)
         .skip(skip)
         .limit(limitNum)
-        .populate("author", "username name")
+        .populate("author", "avatar name")
         .populate("categories", "name"),
       Post.countDocuments(query),
     ]);
@@ -95,7 +95,7 @@ export async function getOnePost(req: Request, res: Response) {
       );
     }
     const post = await Post.findById(id)
-      .populate("author", "username name")
+      .populate("author", "avatar name")
       .populate("categories", "name");
     if (!post) {
       return handleError(
@@ -248,7 +248,7 @@ export async function editPost(req: AuthRequest, res: Response) {
     }
     await post.save();
 
-    await post.populate("author", "username name");
+    await post.populate("author", "avatar name");
     await post.populate("categories", "name");
     handleSuccess(res, filterPost(post), messages.POST_EDITED, STATUS_CODES.OK);
   } catch (error) {

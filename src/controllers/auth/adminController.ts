@@ -16,6 +16,7 @@ import Comment from "../../models/Comment";
 export async function getAllUsers(req: Request, res: Response) {
   try {
     const { search, id, sort, role, status } = req.query;
+
     // Search by ID (exact) with ObjectId validation
     if (id) {
       const objectIdPattern = /^[0-9a-fA-F]{24}$/;
@@ -34,16 +35,18 @@ export async function getAllUsers(req: Request, res: Response) {
       );
     }
 
-    // Search by text (username, name, email)
+    // Search by text (name, email)
     let query: any = {};
     if (search) {
       const regex = new RegExp(search as string, "i");
-      query.$or = [{ username: regex }, { name: regex }, { email: regex }];
+      query.$or = [{ name: regex }, { email: regex }];
     }
+
     // Filter by role
     if (role) {
       query.role = role;
     }
+
     // Filter by status (isActive)
     if (status !== undefined) {
       if (status === "active") query.isActive = true;
@@ -57,7 +60,6 @@ export async function getAllUsers(req: Request, res: Response) {
     // Sorting
     let sortOption: any = { createdAt: -1 }; // Default: newest
     if (sort === "oldest") sortOption = { createdAt: 1 };
-    else if (sort === "username") sortOption = { username: 1 };
     else if (sort === "email") sortOption = { email: 1 };
     else if (sort === "name") sortOption = { name: 1 };
     else if (sort === "role") sortOption = { role: 1 };
@@ -134,7 +136,7 @@ export async function getAllPostsAdmin(req: Request, res: Response) {
         .sort(sortOption)
         .skip(skip)
         .limit(limitNum)
-        .populate("author", "username name")
+        .populate("author", "name")
         .populate("categories", "name"),
       Post.countDocuments(query),
     ]);
@@ -174,7 +176,7 @@ export async function getAllCommentsAdmin(req: Request, res: Response) {
         .sort(sortOption)
         .skip(skip)
         .limit(limitNum)
-        .populate("author", "username name avatar")
+        .populate("author", "name avatar")
         .populate("post", "title"),
       Comment.countDocuments(),
     ]);

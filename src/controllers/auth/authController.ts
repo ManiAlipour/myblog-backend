@@ -14,22 +14,19 @@ import messages, { STATUS_CODES } from "../../utils/constants/messages";
 import { AuthRequest } from "../../middleware/authMiddleware";
 
 const MSG_EMAIL_USED = "ایمیل قبلاً ثبت شده است.";
-const MSG_USERNAME_USED = "نام کاربری قبلاً استفاده شده است.";
 
 export async function addNewUser(req: Request, res: Response) {
   if (useValidationResult({ req, res })) return;
 
-  const { email, password, username } = req.body;
+  const { email, password, name } = req.body;
 
   try {
     const existingUser = await User.findOne({
-      $or: [{ email: email.toLowerCase() }, { username }],
+      email: email.toLowerCase(),
     });
 
     if (existingUser) {
-      const isEmailUsed = existingUser.email === email.toLowerCase();
-      const message = isEmailUsed ? MSG_EMAIL_USED : MSG_USERNAME_USED;
-      return handleError(res, null, 409, message);
+      return handleError(res, null, 409, MSG_EMAIL_USED);
     }
 
     const hashedPassword = await hashPassword(password);
@@ -47,7 +44,7 @@ export async function addNewUser(req: Request, res: Response) {
     const user = new User({
       email: email.toLowerCase(),
       password: hashedPassword,
-      username,
+      name,
       code,
     });
 
@@ -140,6 +137,8 @@ export async function login(req: Request, res: Response) {
       200
     );
   } catch (error) {
+    console.log(error);
+
     handleError(res, error, 500, messages.SERVER_ERROR);
   }
 }

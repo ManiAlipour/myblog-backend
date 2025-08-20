@@ -106,15 +106,17 @@ export async function getOneCategory(req: Request, res: Response) {
 export async function getPostWithCategory(req: Request, res: Response) {
   try {
     const { id, slug } = req.query;
-    let categoryQuery: any = {};
+    const categoryQuery: Record<string, any> = {};
+
     if (id) {
-      if (!objectIdPatternCheck(id))
+      if (!objectIdPatternCheck(id)) {
         return handleError(
           res,
           null,
           STATUS_CODES.BAD_REQUEST,
           messages.INVALID_CATEGORY_ID
         );
+      }
       categoryQuery._id = id;
     } else if (slug) {
       categoryQuery.slug = slug;
@@ -138,12 +140,12 @@ export async function getPostWithCategory(req: Request, res: Response) {
     }
 
     const posts = await Post.find({ categories: category._id })
-      .populate("author", "username name")
+      .populate("author", "name avatar")
       .populate("categories", "name");
 
     return handleSuccess(
       res,
-      posts.map((post) => filterPost(post)),
+      posts.map(filterPost),
       messages.POSTS_LIST_RETRIEVED,
       STATUS_CODES.OK
     );
